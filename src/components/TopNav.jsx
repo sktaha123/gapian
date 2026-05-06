@@ -1,4 +1,5 @@
 import { Info } from 'lucide-react';
+import logo from '../assets/images/logo.png';
 
 function TopNav({ onGuide }) {
   return (
@@ -6,19 +7,19 @@ function TopNav({ onGuide }) {
       <div className="mx-auto flex h-[68px] max-w-7xl items-center justify-between px-5 sm:px-8 lg:px-12">
         
         {/* LEFT */}
-<div className="flex items-center">
+        <div className="flex items-center">
 
-  <img
-    src="/src/assets/images/logo.png"
-    alt="Gapian Logo"
-    className="
-      h-10
-      w-auto
-      object-contain
-      select-none
-    "
-  />
-</div>
+          <img
+            src={logo}
+            alt="Gapian Logo"
+            className="
+              h-10
+              w-auto
+              object-contain
+              select-none
+            "
+          />
+        </div>
 
         {/* RIGHT */}
         <button
