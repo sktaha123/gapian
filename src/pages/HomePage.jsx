@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { TypeAnimation } from 'react-type-animation';
 
 import DashboardLayout from '../layouts/DashboardLayout.jsx';
 import SearchBar from '../components/SearchBar.jsx';
@@ -64,73 +65,118 @@ function HomePage() {
         <AnimatePresence mode="wait">
           {!hasResults ? (
             <motion.section
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35 }}
-              className="
-                mx-auto
-                flex
-                max-w-5xl
-                flex-col
-                items-center
-                justify-center
-                pt-20
-                text-center
-              "
-            >
-              {/* Small Label */}
-              <p className="text-xs uppercase tracking-[0.28em] text-[#7DA2FF]">
-                Creator Intelligence Platform
-              </p>
+  initial={{ opacity: 0 }}
+  animate={{ opacity: 1 }}
+  exit={{ opacity: 0 }}
+  transition={{ duration: 0.4 }}
+  className="
+    relative
+    mx-auto
+    flex
+    max-w-4xl
+    flex-col
+    items-center
+    justify-center
+    pt-10
+    text-center
+  "
+>
 
-              {/* Main Heading */}
-              <h1
-                className="
-                  mt-8
-                  max-w-5xl
-                  text-5xl
-                  font-medium
-                  leading-[1.05]
-                  tracking-[-0.06em]
-                  text-[#F8FAFC]
-                  sm:text-7xl
-                "
-              >
-                Creator intelligence for modern digital products.
-              </h1>
+  {/* Soft Ambient Glow */}
+  <div className="pointer-events-none absolute inset-0">
+    <div className="absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full bg-[#3B82F6]/10 blur-[100px]" />
+  </div>
 
-              {/* Supporting Text */}
-              <p
-                className="
-                  mt-8
-                  max-w-2xl
-                  text-lg
-                  leading-8
-                  text-[#94A3B8]
-                "
-              >
-                Generate premium digital product concepts,
-                positioning headlines, and creator-focused launch ideas
-                using a cinematic AI-native workspace.
-              </p>
+  {/* Small Label */}
+  
 
-              {/* Trends CTA */}
-              <button
-                type="button"
-                onClick={() => setShowTrends(true)}
-                className="
-                  mt-12
-                  text-sm
-                  text-[#7DA2FF]
-                  transition-all
-                  duration-300
-                  hover:text-[#A5C4FF]
-                "
-              >
-                Search trending topics
-              </button>
-            </motion.section>
+  {/* Heading */}
+  <motion.h1
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{
+      duration: 0.4,
+      delay: 0.1
+    }}
+    className="
+      relative
+      mt-7
+      max-w-3xl
+      text-4xl
+      font-semibold
+      leading-[1]
+      tracking-[-0.05em]
+      text-[#F8FAFC]
+      sm:text-5xl
+    "
+  >
+    Discover digital product ideas
+    <span className="block mt-2 text-[#A5C4FF]">
+      powered by AI intelligence.
+    </span>
+  </motion.h1>
+
+  {/* Description */}
+  <motion.div
+  initial={{ opacity: 0, y: 10 }}
+  animate={{ opacity: 1, y: 0 }}
+  transition={{
+    duration: 0.4,
+    delay: 0.18
+  }}
+  className="
+    relative
+    mt-6
+    max-w-xl
+    text-[14px]
+    leading-7
+    text-[#94A3B8]
+    sm:text-[15px]
+  "
+>
+  <TypeAnimation
+    sequence={[
+      'Generate premium creator-focused concepts, positioning headlines, and marketable digital product opportunities instantly.',
+      1000
+    ]}
+    speed={75}
+    cursor={true}
+    repeat={0}
+    className="text-[#94A3B8]"
+  />
+</motion.div>
+
+  {/* CTA */}
+  <motion.button
+    type="button"
+    onClick={() => setShowTrends(true)}
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{
+      duration: 0.4,
+      delay: 0.26
+    }}
+    className="
+      relative
+      mt-8
+      rounded-full
+      border
+      border-white/[0.06]
+      bg-white/[0.03]
+      px-5
+      py-2.5
+      text-sm
+      text-[#CBD5E1]
+      transition-all
+      duration-300
+      hover:border-[#3B82F6]/30
+      hover:bg-[#3B82F6]/[0.05]
+      hover:text-white
+    "
+  >
+    Explore trending topics
+  </motion.button>
+</motion.section>   
           ) : (
             <motion.section
               initial={{ opacity: 0, y: 16 }}
@@ -148,7 +194,8 @@ function HomePage() {
                 <h2
                   className="
                     text-4xl
-                    font-medium
+                    font-display
+                    font-semibold
                     tracking-[-0.05em]
                     text-[#F8FAFC]
                   "

@@ -24,7 +24,7 @@ export default {
 
       fontFamily: {
         sans: ["Inter", "sans-serif"],
-        display: ["Inter", "sans-serif"]
+        display: ["DM Sans", "Inter", "sans-serif"]
       },
 
       boxShadow: {
