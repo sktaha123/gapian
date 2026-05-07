@@ -49,6 +49,16 @@ function AccessDenied() {
           </button>
         </div>
 
+        <div className="w-full">
+          <button
+            type="button"
+            onClick={auth.clearMembership}
+            className="w-full rounded-full border border-red-500/30 bg-red-500/10 px-6 py-2 text-xs text-red-400 transition hover:bg-red-500/20"
+          >
+            🧪 Clear Membership (Testing Only)
+          </button>
+        </div>
+
         <p className="text-xs text-[#64748B]">
           <span className="font-medium">Note:</span> This page is a protected gate for Whop membership verification. Manual Whop setup is required in the backend.
         </p>

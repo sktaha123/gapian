@@ -16,21 +16,25 @@ export function AuthProvider({ children }) {
     async function initializeAuth() {
       try {
         const membership = await getMembershipStatus();
-        setAuthState({
+        const nextState = {
           loading: false,
           isAuthenticated: membership.isAuthenticated,
           hasMembership: membership.hasMembership,
           user: membership.user,
           error: null
-        });
+        };
+
+        console.log('AuthProvider initializeAuth:', membership);
+        setAuthState(nextState);
       } catch (error) {
-        setAuthState({
+        const nextState = {
           loading: false,
           isAuthenticated: false,
           hasMembership: false,
           user: null,
           error: 'Unable to verify membership status.'
-        });
+        };
+        setAuthState(nextState);
         console.error('AuthProvider initialization error:', error);
       }
     }
@@ -38,8 +42,14 @@ export function AuthProvider({ children }) {
     initializeAuth();
   }, []);
 
+  useEffect(() => {
+    console.log('AuthProvider state updated:', authState);
+  }, [authState]);
+
   const login = () => {
-    window.location.href = getWhopCheckoutUrl();
+    const checkoutUrl = getWhopCheckoutUrl();
+    console.log('Redirecting to Whop checkout:', checkoutUrl);
+    window.location.href = checkoutUrl;
   };
 
   const refresh = async () => {
@@ -66,8 +76,20 @@ export function AuthProvider({ children }) {
     }
   };
 
+  const clearMembership = () => {
+    localStorage.removeItem('gapian_whop_membership');
+    setAuthState({
+      loading: false,
+      isAuthenticated: false,
+      hasMembership: false,
+      user: null,
+      error: null
+    });
+    console.log('Membership cleared, auth state reset');
+  };
+
   return (
-    <AuthContext.Provider value={{ ...authState, login, refresh }}>
+    <AuthContext.Provider value={{ ...authState, login, refresh, clearMembership }}>
       {children}
     </AuthContext.Provider>
   );

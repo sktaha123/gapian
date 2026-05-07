@@ -2,6 +2,8 @@ import { motion } from 'framer-motion';
 import logo from '../assets/images/logo.png';
 
 function Demophase() {
+
+   
   return (
     <div
       className="

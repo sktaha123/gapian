@@ -5,21 +5,23 @@
 const WHOP_APP_ID = import.meta.env.VITE_WHOP_APP_ID;
 const WHOP_API_KEY = import.meta.env.VITE_WHOP_API_KEY;
 const MEMBERSHIP_PRODUCT_ID = import.meta.env.VITE_WHOP_MEMBERSHIP_PRODUCT_ID;
+const WHOP_REDIRECT_URL = import.meta.env.VITE_WHOP_REDIRECT_URL;
 
 // NOTE: Backend validation is required for production. Do not use WHOP_API_KEY in the browser.
 const CALLBACK_PATH = '/dashboard';
-const buildRedirectUrl = () => `${window.location.origin}${CALLBACK_PATH}?member_status=active`;
+const buildRedirectUrl = () => {
+  if (WHOP_REDIRECT_URL) {
+    return `${WHOP_REDIRECT_URL}?member_status=active`;
+  }
+  return `${window.location.origin}${CALLBACK_PATH}?member_status=active`;
+};
 
 export function getWhopCheckoutUrl() {
-  // TODO: Replace with your Whop App ID and membership product ID in .env.
-  // Example .env entries:
-  // VITE_WHOP_APP_ID=your_whop_app_id
-  // VITE_WHOP_MEMBERSHIP_PRODUCT_ID=your_membership_product_id
-  
-  const appId = WHOP_APP_ID || '<WHOP_APP_ID>';
-  const productId = MEMBERSHIP_PRODUCT_ID || '<MEMBERSHIP_PRODUCT_ID>';
-
-  return `https://whop.com/checkout/${appId}?product_ids=${productId}&redirect_url=${encodeURIComponent(buildRedirectUrl())}`;
+  // Use the direct Whop product page URL with redirect parameter
+  const redirectUrl = encodeURIComponent(buildRedirectUrl());
+  const checkoutUrl = `https://whop.com/gapianai/gapian-ai-access/?redirect_url=${redirectUrl}`;
+  console.log('getWhopCheckoutUrl:', checkoutUrl);
+  return checkoutUrl;
 }
 
 export async function getMembershipStatus() {
@@ -30,25 +32,32 @@ export async function getMembershipStatus() {
   
   const urlParams = new URLSearchParams(window.location.search);
   const memberStatus = urlParams.get('member_status');
+  const parsedParams = Object.fromEntries(urlParams.entries());
+  console.log('getMembershipStatus query params:', JSON.stringify(parsedParams));
 
   if (memberStatus === 'active') {
     localStorage.setItem('gapian_whop_membership', 'active');
+    console.log('Whop membership set to active via query param');
     // Remove the query param after storing membership state.
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if (memberStatus === 'inactive') {
     localStorage.removeItem('gapian_whop_membership');
+    console.log('Whop membership removed via inactive query param');
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
   const stored = localStorage.getItem('gapian_whop_membership');
-
-  return {
+  const membershipState = {
     isAuthenticated: Boolean(stored),
     hasMembership: stored === 'active',
     user: stored ? { name: 'Whop member' } : null
   };
+
+  console.log('getMembershipStatus result:', JSON.stringify(membershipState));
+  return membershipState;
 }
 
 export function clearMembershipState() {
   localStorage.removeItem('gapian_whop_membership');
+  console.log('Membership state cleared');
 }
