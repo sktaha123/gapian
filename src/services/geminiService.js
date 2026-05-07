@@ -33,7 +33,6 @@ export async function fetchProductIdeas(prompt, count) {
     });
 
     const responseText = await response.text();
-    console.log('[Gemini API] Raw response:', responseText);
 
     if (!response.ok) {
       console.error('Gemini API error', response.status, responseText);
@@ -41,9 +40,7 @@ export async function fetchProductIdeas(prompt, count) {
     }
 
     const parsedIdeas = await extractIdeasFromResponse(responseText);
-    console.log('[Gemini API] Extracted ideas:', parsedIdeas);
     const finalResult = parseIdeas(parsedIdeas, prompt, count);
-    console.log('[Gemini API] Final output:', finalResult);
     return finalResult;
   } catch (error) {
     console.error('Gemini request failed', error);
@@ -53,31 +50,24 @@ export async function fetchProductIdeas(prompt, count) {
 
 async function extractIdeasFromResponse(responseText) {
   const trimmed = responseText.trim();
-  console.log('[Gemini Parser] Trimmed response:', trimmed.substring(0, 200) + '...');
 
   // Try raw JSON parse first.
   const parsed = tryParseJson(trimmed);
   if (Array.isArray(parsed)) {
-    console.log('[Gemini Parser] ✓ Parsed as direct JSON array');
     return parsed;
   }
 
   if (parsed && typeof parsed === 'object') {
-    console.log('[Gemini Parser] Response is an object, extracting text...');
     const candidateText = extractTextFromGeminiObject(parsed);
     if (typeof candidateText === 'string') {
-      console.log('[Gemini Parser] Extracted text:', candidateText.substring(0, 200) + '...');
       const candidateParsed = tryParseJson(candidateText);
       if (Array.isArray(candidateParsed)) {
-        console.log('[Gemini Parser] ✓ Parsed extracted text as JSON array');
         return candidateParsed;
       }
-      console.log('[Gemini Parser] Trying safe parse on extracted text...');
       return safeParseJsonArray(candidateText);
     }
   }
 
-  console.log('[Gemini Parser] Trying safe parse on trimmed response...');
   return safeParseJsonArray(trimmed);
 }
 

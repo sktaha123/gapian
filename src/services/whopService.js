@@ -20,7 +20,6 @@ export function getWhopCheckoutUrl() {
   // Use the direct Whop product page URL with redirect parameter
   const redirectUrl = encodeURIComponent(buildRedirectUrl());
   const checkoutUrl = `https://whop.com/gapianai/gapian-ai-access/?redirect_url=${redirectUrl}`;
-  console.log('getWhopCheckoutUrl:', checkoutUrl);
   return checkoutUrl;
 }
 
@@ -32,17 +31,13 @@ export async function getMembershipStatus() {
   
   const urlParams = new URLSearchParams(window.location.search);
   const memberStatus = urlParams.get('member_status');
-  const parsedParams = Object.fromEntries(urlParams.entries());
-  console.log('getMembershipStatus query params:', JSON.stringify(parsedParams));
 
   if (memberStatus === 'active') {
     localStorage.setItem('gapian_whop_membership', 'active');
-    console.log('Whop membership set to active via query param');
     // Remove the query param after storing membership state.
     window.history.replaceState({}, document.title, window.location.pathname);
   } else if (memberStatus === 'inactive') {
     localStorage.removeItem('gapian_whop_membership');
-    console.log('Whop membership removed via inactive query param');
     window.history.replaceState({}, document.title, window.location.pathname);
   }
 
@@ -53,11 +48,9 @@ export async function getMembershipStatus() {
     user: stored ? { name: 'Whop member' } : null
   };
 
-  console.log('getMembershipStatus result:', JSON.stringify(membershipState));
   return membershipState;
 }
 
 export function clearMembershipState() {
   localStorage.removeItem('gapian_whop_membership');
-  console.log('Membership state cleared');
 }

@@ -24,7 +24,6 @@ export function AuthProvider({ children }) {
           error: null
         };
 
-        console.log('AuthProvider initializeAuth:', membership);
         setAuthState(nextState);
       } catch (error) {
         const nextState = {
@@ -42,13 +41,8 @@ export function AuthProvider({ children }) {
     initializeAuth();
   }, []);
 
-  useEffect(() => {
-    console.log('AuthProvider state updated:', authState);
-  }, [authState]);
-
   const login = () => {
     const checkoutUrl = getWhopCheckoutUrl();
-    console.log('Redirecting to Whop checkout:', checkoutUrl);
     window.location.href = checkoutUrl;
   };
 
@@ -85,7 +79,6 @@ export function AuthProvider({ children }) {
       user: null,
       error: null
     });
-    console.log('Membership cleared, auth state reset');
   };
 
   return (
