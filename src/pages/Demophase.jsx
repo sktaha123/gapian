@@ -1,4 +1,5 @@
 import { motion } from 'framer-motion';
+import logo from '../assets/images/logo.png';
 
 function Demophase() {
   return (
@@ -62,7 +63,7 @@ function Demophase() {
             duration: 0.5,
             delay: 0.1
           }}
-          src="/src/assets/images/logo.png"
+          src={logo}
           alt="Gapian Logo"
           className="
             h-24
