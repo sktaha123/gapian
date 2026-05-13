@@ -1,16 +1,8 @@
 import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, BookmarkX, Download, Inbox } from 'lucide-react';
+import { X, BookmarkX, Download, Inbox, FileText } from 'lucide-react';
+import { exportCSV, exportPDF } from '../utils/exportUtils.js';
 
-function exportCSV(ideas) {
-  const header = ['Title', 'Headline', 'Description', 'Score', 'Tags', 'Pricing', 'Audience'];
-  const rows   = ideas.map(i => [i.title, i.headline, i.description, i.score, (i.tags || []).join(' | '), i.pricing, i.audience]);
-  const csv    = [header, ...rows].map(r => r.map(c => `"${String(c ?? '').replace(/"/g, '""')}"`).join(',')).join('\n');
-  const blob   = new Blob([csv], { type: 'text/csv' });
-  const url    = URL.createObjectURL(blob);
-  const a      = document.createElement('a'); a.href = url; a.download = 'gapian-saved.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
 
 function SavedVault({ open, onClose, getSaved, onUnsave }) {
   const ideas = open ? getSaved() : [];
@@ -88,10 +80,18 @@ function SavedVault({ open, onClose, getSaved, onUnsave }) {
 
             {/* Footer */}
             {ideas.length > 0 && (
-              <div className="border-t border-white/[0.06] p-4">
+              <div className="border-t border-white/[0.06] p-4 flex flex-col gap-2">
                 <button
                   type="button"
-                  onClick={() => exportCSV(ideas)}
+                  onClick={() => exportPDF(ideas, 'gapian-vault.pdf')}
+                  className="flex w-full items-center justify-center gap-2 rounded-xl border border-blue-500/30 bg-blue-500/10 py-2.5 text-[13px] font-medium text-blue-300 transition-all hover:bg-blue-500/20"
+                >
+                  <FileText size={14} />
+                  Download PDF
+                </button>
+                <button
+                  type="button"
+                  onClick={() => exportCSV(ideas, 'gapian-vault.csv')}
                   className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 py-2.5 text-[13px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white"
                 >
                   <Download size={14} />

@@ -21,17 +21,8 @@ import { fetchProductIdeas, fetchRefinedIdeas } from '../services/geminiService.
 import { useSavedIdeas }    from '../hooks/useSavedIdeas.js';
 import { useSearchHistory } from '../hooks/useSearchHistory.js';
 import { isOnboardingDone } from '../services/storageService.js';
+import { exportCSV, exportPDF } from '../utils/exportUtils.js';
 
-// ── CSV export ────────────────────────────────────────────────────────────────
-function exportCSV(ideas) {
-  const header = ['Title', 'Headline', 'Description', 'Score', 'Tags', 'Pricing', 'Audience'];
-  const rows   = ideas.map(i => [i.title, i.headline, i.description, i.score, (i.tags||[]).join('|'), i.pricing, i.audience]);
-  const csv    = [header, ...rows].map(r => r.map(c => `"${String(c??'').replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob   = new Blob([csv], { type: 'text/csv' });
-  const url    = URL.createObjectURL(blob);
-  const a      = document.createElement('a'); a.href=url; a.download='gapian-results.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
 
 function HomePage() {
   // ── Search state ────────────────────────────────────────────────────────────
@@ -251,6 +242,10 @@ function HomePage() {
                       <SquareStack size={13} />Compare 2
                     </motion.button>
                   )}
+                  <button type="button" onClick={() => exportPDF(results)}
+                    className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1.5 text-[13px] font-medium text-blue-300 transition-all hover:bg-blue-500/20">
+                    <Download size={13} />PDF
+                  </button>
                   <button type="button" onClick={() => exportCSV(results)}
                     className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[13px] font-medium text-slate-400 transition-all hover:bg-white/10 hover:text-white">
                     <Download size={13} />CSV

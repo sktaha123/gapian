@@ -18,6 +18,8 @@
     "express": "^5.2.1",
     "framer-motion": "^11.0.0",
     "google-auth-library": "^10.6.2",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.481.0",
     "node-fetch": "^3.3.2",
     "react": "^18.3.1",
