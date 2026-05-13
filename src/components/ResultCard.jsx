@@ -112,28 +112,7 @@ function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggl
         <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
           {/* Left: rating */}
           <div className="flex items-center gap-1">
-            <button
-              type="button"
-              onClick={() => handleRate('up')}
-              className={`flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200 ${
-                rating === 'up'
-                  ? 'border-emerald-500/40 bg-emerald-500/20 text-emerald-400'
-                  : 'border-white/8 bg-white/4 text-slate-500 hover:text-emerald-400'
-              }`}
-            >
-              <ThumbsUp size={12} />
-            </button>
-            <button
-              type="button"
-              onClick={() => handleRate('down')}
-              className={`flex h-7 w-7 items-center justify-center rounded-full border transition-all duration-200 ${
-                rating === 'down'
-                  ? 'border-red-500/40 bg-red-500/20 text-red-400'
-                  : 'border-white/8 bg-white/4 text-slate-500 hover:text-red-400'
-              }`}
-            >
-              <ThumbsDown size={12} />
-            </button>
+            
           </div>
 
           {/* Right: save + expand + copy */}
