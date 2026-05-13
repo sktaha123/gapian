@@ -122,15 +122,14 @@ async function getAuthToken() {
 // 1. Main idea generation (enriched schema)
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchProductIdeas(prompt, count, options = {}) {
-  const { language = 'English', creatorType = '' } = options;
-  const cacheKey = `ideas:${prompt}:${count}:${language}:${creatorType}`;
+  const { creatorType = '' } = options;
+  const cacheKey = `ideas:${prompt}:${count}:${creatorType}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey);
 
   const creatorHint = creatorType ? ` The creator type is: ${creatorType}.` : '';
-  const langHint = language !== 'English' ? ` Respond in ${language}.` : '';
 
   const prompt_ = [
-    `You are a digital product strategist.${creatorHint}${langHint}`,
+    `You are a digital product strategist.${creatorHint}`,
     `Generate exactly ${count} premium digital product ideas for: "${prompt}".`,
     '',
     'Return ONLY a valid JSON array. Each item MUST have these fields:',

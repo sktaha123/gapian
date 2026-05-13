@@ -6,10 +6,7 @@ const TRENDING_TOPICS = [
   'Mental Health', 'E-commerce', 'Parenting', 'Travel', 'Gaming',
 ];
 
-const LANGUAGES = [
-  'English', 'Spanish', 'French', 'Arabic', 'German',
-  'Portuguese', 'Hindi', 'Japanese', 'Chinese', 'Italian',
-];
+
 
 const CREATOR_TYPES = [
   'YouTuber', 'Course Creator', 'Indie Hacker', 'Coach / Consultant',
@@ -21,7 +18,6 @@ function SearchBar({
   quantity, onQuantityChange,
   onSearch, isLoading,
   showTrends, setShowTrends, onSelectTrend,
-  language, onLanguageChange,
   creatorType, onCreatorTypeChange,
   history, onSelectHistory, onRemoveHistory,
   showHistory, setShowHistory,
@@ -80,11 +76,7 @@ function SearchBar({
 
                 {/* Left: Trends + History */}
                 <div className="flex items-center gap-1 shrink-0 sm:gap-1.5">
-                  <button type="button"
-                    onClick={() => { setShowTrends(t => !t); setShowHistory(false); }}
-                    className="inline-flex h-6 items-center gap-1 rounded-full border border-white/5 bg-white/5 px-2 text-[11px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
-                    <Sparkles size={10} className="text-blue-400 sm:w-[11px] sm:h-[11px]" /><span>Trends</span>
-                  </button>
+                  
 
                   <button type="button"
                     onClick={() => { setShowHistory(h => !h); setShowTrends(false); }}
@@ -117,10 +109,7 @@ function SearchBar({
 
                 {/* Right: selects */}
                 <div className="flex items-center gap-1 shrink-0 sm:gap-1.5">
-                  <select value={language} onChange={e => onLanguageChange(e.target.value)}
-                    className="h-6 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-1.5 text-[11px] font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none sm:h-7 sm:px-2 sm:text-xs">
-                    {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
-                  </select>
+                  
 
                   {/* Creator type — hidden on very small screens */}
                   <select value={creatorType} onChange={e => onCreatorTypeChange(e.target.value)}

@@ -37,7 +37,6 @@ function HomePage() {
   // ── Search state ────────────────────────────────────────────────────────────
   const [query,       setQuery]       = useState('I am looking for ');
   const [quantity,    setQuantity]    = useState(5);
-  const [language,    setLanguage]    = useState('English');
   const [creatorType, setCreatorType] = useState('');
 
   // ── Results state ───────────────────────────────────────────────────────────
@@ -95,7 +94,7 @@ function HomePage() {
     setShowTrends(false); setShowHistory(false);
     setStatus('loading'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]);
     try {
-      const ideas = await fetchProductIdeas(trimmed, quantity, { language, creatorType });
+      const ideas = await fetchProductIdeas(trimmed, quantity, { creatorType });
       setResults(ideas);
       setStatus('complete');
       addEntry(trimmed, quantity);
@@ -298,7 +297,6 @@ function HomePage() {
       <SearchBar
         query={query}           onQueryChange={setQuery}
         quantity={quantity}     onQuantityChange={setQuantity}
-        language={language}     onLanguageChange={setLanguage}
         creatorType={creatorType} onCreatorTypeChange={setCreatorType}
         onSearch={handleSearch} isLoading={isLoading}
         showTrends={showTrends} setShowTrends={setShowTrends} onSelectTrend={handleSelectTrend}
