@@ -1,197 +1,98 @@
-import { ArrowUpRight, Sparkles, Search } from 'lucide-react';
+import { ArrowUpRight, Sparkles, Search, Globe, User, Clock, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const trendingTopics = [
-  'Fitness',
-  'AI',
-  'Productivity',
-  'Finance',
-  'Education'
+const TRENDING_TOPICS = [
+  'Fitness', 'AI Tools', 'Productivity', 'Finance', 'Education',
+  'Mental Health', 'E-commerce', 'Parenting', 'Travel', 'Gaming',
+];
+
+const LANGUAGES = [
+  'English', 'Spanish', 'French', 'Arabic', 'German',
+  'Portuguese', 'Hindi', 'Japanese', 'Chinese', 'Italian',
+];
+
+const CREATOR_TYPES = [
+  'YouTuber', 'Course Creator', 'Indie Hacker', 'Coach / Consultant',
+  'Newsletter Writer', 'Podcaster', 'Freelancer', 'Agency Owner',
 ];
 
 function SearchBar({
-  query,
-  onQueryChange,
-  quantity,
-  onQuantityChange,
-  onSearch,
-  isLoading,
-  showTrends,
-  setShowTrends,
-  onSelectTrend
+  query, onQueryChange,
+  quantity, onQuantityChange,
+  onSearch, isLoading,
+  showTrends, setShowTrends, onSelectTrend,
+  language, onLanguageChange,
+  creatorType, onCreatorTypeChange,
+  history, onSelectHistory, onRemoveHistory,
+  showHistory, setShowHistory,
 }) {
-
-  // DEFINED HERE: Variables must be outside the JSX return block
-  const snakeDashArray = "35 65"; 
-  const animationProps = {
+  const snakeDashArray = '35 65';
+  const animProps = {
     initial: { strokeDashoffset: 100 },
     animate: { strokeDashoffset: 0 },
-    transition: {
-      duration: 10, 
-      repeat: Infinity,
-      ease: "linear"
-    }
+    transition: { duration: 10, repeat: Infinity, ease: 'linear' },
   };
 
   return (
     <>
-      {/* SEARCH BAR CONTAINER */}
-      <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-6 md:pb-2">
+      {/* SEARCH BAR */}
+      <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 md:pb-2">
         <div className="mx-auto w-full max-w-3xl">
-          
-          {/* Main Container with BIG GLOWY Snake Effect */}
           <div className="relative rounded-[24px] p-[1px] overflow-hidden shadow-2xl">
-            
-            {/* 1. The Big Glowy Snake Layer (behind content) */}
+
+            {/* Animated border */}
             <div className="pointer-events-none absolute inset-0 z-0">
               <svg className="h-full w-full overflow-visible">
-                {/* A. The static base border (very subtle) */}
-                <rect
-                  width="100%"
-                  height="100%"
-                  rx="24"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.05)"
-                  strokeWidth="1"
-                />
-                
-                {/* B. The Glow Layer (thicker, blurred blue) */}
-                <motion.rect
-                  width="100%"
-                  height="100%"
-                  rx="24"
-                  fill="none"
-                  stroke="#3B82F6" // Blue-600
-                  strokeWidth="4" // Thicker for glow base
-                  strokeLinecap="round"
-                  pathLength="100" 
-                  strokeDasharray={snakeDashArray}
-                  {...animationProps}
-                  className="opacity-60 blur-[6px]"
-                />
-
-                {/* C. The Core Light Layer (thinner, bright blue) */}
-                <motion.rect
-                  width="100%"
-                  height="100%"
-                  rx="24"
-                  fill="none"
-                  stroke="#93C5FD" // Blue-300 (brighter core)
-                  strokeWidth="1.5"
-                  strokeLinecap="round"
-                  pathLength="100" 
-                  strokeDasharray={snakeDashArray}
-                  {...animationProps}
-                />
+                <rect width="100%" height="100%" rx="24" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+                <motion.rect width="100%" height="100%" rx="24" fill="none" stroke="#3B82F6" strokeWidth="4" strokeLinecap="round" pathLength="100" strokeDasharray={snakeDashArray} {...animProps} className="opacity-60 blur-[6px]" />
+                <motion.rect width="100%" height="100%" rx="24" fill="none" stroke="#93C5FD" strokeWidth="1.5" strokeLinecap="round" pathLength="100" strokeDasharray={snakeDashArray} {...animProps} />
               </svg>
             </div>
 
-            {/* 2. Content Container (Masks the inner area) */}
-            <div 
-              className="
-                relative 
-                z-10 
-                flex 
-                flex-col 
-                rounded-[23px] 
-                bg-[#0B1220]/90 
-                p-2 
-                backdrop-blur-xl
-              "
-            >
-              {/* TOP ROW: INPUT */}
-              <div className="flex items-center gap-3 px-3 py-2">
-                <Search size={18} className="text-slate-400 group-focus-within:text-blue-300" />
-                
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={query}
-                    onChange={(event) => onQueryChange(event.target.value)}
-                    placeholder="I am looking for..."
-                    className="
-                      w-full
-                      bg-transparent
-                      text-[15px]
-                      font-medium
-                      text-slate-100
-                      placeholder:text-slate-500
-                      outline-none
-                    "
-                  />
-                </div>
+            {/* Content */}
+            <div className="relative z-10 flex flex-col rounded-[23px] bg-[#0B1220]/90 p-2 backdrop-blur-xl">
 
-                {/* GENERATE BUTTON */}
+              {/* Input row */}
+              <div className="flex items-center gap-3 px-3 py-2">
+                <Search size={18} className="text-slate-400 shrink-0" />
+                <input
+                  type="text"
+                  value={query}
+                  onChange={e => onQueryChange(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && onSearch()}
+                  placeholder="I am looking for..."
+                  className="flex-1 bg-transparent text-[15px] font-medium text-slate-100 placeholder:text-slate-500 outline-none min-w-0"
+                />
                 <button
                   type="button"
                   onClick={onSearch}
                   disabled={!query.trim() || isLoading}
-                  className="
-                    inline-flex
-                    h-9
-                    w-9
-                    shrink-0
-                    items-center
-                    justify-center
-                    rounded-full
-                    bg-blue-600
-                    text-white
-                    transition-all
-                    duration-300
-                    hover:bg-blue-500
-                    disabled:opacity-40
-                    disabled:hover:bg-blue-600
-                  "
+                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-all duration-300 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600"
                 >
                   <ArrowUpRight size={18} strokeWidth={2.5} />
                 </button>
               </div>
 
-              {/* SEPARATOR */}
               <div className="mx-2 h-px bg-white/5" />
 
-              {/* BOTTOM ROW: CONTROLS */}
-              <div className="flex items-center justify-between px-2 pt-2 pb-1">
-                
-                {/* LEFT: TRENDS */}
-                <div 
-                  className="
-                    flex 
-                    items-center 
-                    gap-2 
-                    overflow-x-auto 
-                    [&::-webkit-scrollbar]:hidden 
-                    [-ms-overflow-style:none] 
-                    [scrollbar-width:none]
-                  "
-                >
-                  <button
-                    type="button"
-                    onClick={() => setShowTrends(!showTrends)}
-                    className="
-                      inline-flex
-                      h-7
-                      shrink-0
-                      items-center
-                      gap-1.5
-                      rounded-full
-                      border
-                      border-white/5
-                      bg-white/5
-                      px-3
-                      text-xs
-                      font-medium
-                      text-slate-300
-                      transition-all
-                      hover:bg-white/10
-                      hover:text-white
-                    "
-                  >
-                    <Sparkles size={12} className="text-blue-400" />
-                    <span>Trends</span>
+              {/* Controls row — single line, no wrap, overflow scrollable */}
+              <div className="flex items-center justify-between gap-2 px-2 pt-2 pb-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+
+                {/* Left: Trends + History */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <button type="button"
+                    onClick={() => { setShowTrends(t => !t); setShowHistory(false); }}
+                    className="inline-flex h-7 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-xs font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap">
+                    <Sparkles size={11} className="text-blue-400" /><span>Trends</span>
                   </button>
 
-                  {/* DESKTOP TREND PILLS */}
+                  <button type="button"
+                    onClick={() => { setShowHistory(h => !h); setShowTrends(false); }}
+                    className="inline-flex h-7 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-xs font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap">
+                    <Clock size={11} className="text-slate-400" /><span>History</span>
+                  </button>
+
+                  {/* Desktop trend pills — inline */}
                   <div className="hidden md:block">
                     <AnimatePresence>
                       {showTrends && (
@@ -199,28 +100,12 @@ function SearchBar({
                           initial={{ opacity: 0, width: 0, x: -10 }}
                           animate={{ opacity: 1, width: 'auto', x: 0 }}
                           exit={{ opacity: 0, width: 0, x: -10 }}
-                          className="flex items-center gap-1.5 overflow-hidden"
+                          className="flex items-center gap-1 overflow-hidden"
                         >
-                          {trendingTopics.map((topic) => (
-                            <button
-                              key={topic}
-                              type="button"
-                              onClick={() => onSelectTrend(topic)}
-                              className="
-                                whitespace-nowrap
-                                rounded-full
-                                border
-                                border-transparent
-                                px-2.5
-                                py-1
-                                text-[11px]
-                                font-medium
-                                text-slate-400
-                                transition-all
-                                hover:bg-white/5
-                                hover:text-slate-200
-                              "
-                            >
+                          {TRENDING_TOPICS.map(topic => (
+                            <button key={topic} type="button"
+                              onClick={() => { onSelectTrend(topic); setShowTrends(false); }}
+                              className="whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-slate-200">
                               {topic}
                             </button>
                           ))}
@@ -230,33 +115,23 @@ function SearchBar({
                   </div>
                 </div>
 
-                {/* RIGHT: OUTPUT QUANTITY */}
-                <div className="shrink-0 pl-2">
-                  <select
-                    value={quantity}
-                    onChange={(event) => onQuantityChange(Number(event.target.value))}
-                    className="
-                      h-7
-                      cursor-pointer
-                      rounded-full
-                      border
-                      border-white/5
-                      bg-transparent
-                      px-2
-                      text-xs
-                      font-medium
-                      text-slate-400
-                      outline-none
-                      transition-colors
-                      hover:bg-white/5
-                      hover:text-slate-200
-                    "
-                  >
-                    {[3, 5, 10, 20].map((option) => (
-                      <option key={option} value={option} className="bg-[#0B1220] text-slate-200">
-                        {option} outputs
-                      </option>
-                    ))}
+                {/* Right: selects — single line, no wrap */}
+                <div className="flex items-center gap-1.5 shrink-0">
+                  <select value={language} onChange={e => onLanguageChange(e.target.value)}
+                    className="h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
+                    {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
+                  </select>
+
+                  {/* Creator type — hidden on very small screens */}
+                  <select value={creatorType} onChange={e => onCreatorTypeChange(e.target.value)}
+                    className="hidden sm:block h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
+                    <option value="">Any Creator</option>
+                    {CREATOR_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
+                  </select>
+
+                  <select value={quantity} onChange={e => onQuantityChange(Number(e.target.value))}
+                    className="h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
+                    {[3, 5, 10, 20].map(n => <option key={n} value={n}>{n} results</option>)}
                   </select>
                 </div>
               </div>
@@ -269,71 +144,66 @@ function SearchBar({
       <AnimatePresence>
         {showTrends && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="
-              fixed
-              inset-0
-              z-[999]
-              flex
-              items-end
-              justify-center
-              bg-black/40
-              p-4
-              pb-28
-              backdrop-blur-sm
-              md:hidden
-            "
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-end justify-center bg-black/40 p-4 pb-24 backdrop-blur-sm md:hidden"
             onClick={() => setShowTrends(false)}
           >
             <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }}
-              transition={{ duration: 0.2 }}
-              onClick={(e) => e.stopPropagation()}
-              className="
-                w-full
-                max-w-[340px]
-                overflow-hidden
-                rounded-2xl
-                border
-                border-white/10
-                bg-[#0B1220]/95
-                p-2
-                shadow-2xl
-                backdrop-blur-xl
-              "
+              initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }} transition={{ duration: 0.2 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-[#0B1220]/95 p-2 shadow-2xl backdrop-blur-xl"
             >
-              <div className="px-2 py-3 text-center text-xs font-medium text-slate-400">
-                Trending Topics
-              </div>
-              <div className="flex flex-col gap-1">
-                {trendingTopics.map((topic) => (
-                  <button
-                    key={topic}
-                    type="button"
-                    onClick={() => {
-                      onSelectTrend(topic);
-                      setShowTrends(false);
-                    }}
-                    className="
-                      rounded-xl
-                      px-4
-                      py-3
-                      text-left
-                      text-sm
-                      font-medium
-                      text-slate-200
-                      transition-colors
-                      hover:bg-white/10
-                    "
-                  >
+              <div className="px-2 py-3 text-center text-xs font-medium text-slate-400">Trending Topics</div>
+              <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
+                {TRENDING_TOPICS.map(topic => (
+                  <button key={topic} type="button"
+                    onClick={() => { onSelectTrend(topic); setShowTrends(false); }}
+                    className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10">
                     {topic}
                   </button>
                 ))}
               </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* HISTORY PANEL */}
+      <AnimatePresence>
+        {showHistory && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[999] flex items-end justify-center bg-black/40 p-4 pb-24 backdrop-blur-sm"
+            onClick={() => setShowHistory(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }} transition={{ duration: 0.2 }}
+              onClick={e => e.stopPropagation()}
+              className="w-full max-w-sm overflow-hidden rounded-2xl border border-white/10 bg-[#0B1220]/95 p-2 shadow-2xl backdrop-blur-xl"
+            >
+              <div className="px-2 py-3 text-center text-xs font-medium text-slate-400">Search History</div>
+              {history.length === 0
+                ? <p className="px-4 py-4 text-center text-[13px] text-slate-600">No history yet.</p>
+                : (
+                  <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
+                    {history.map(h => (
+                      <div key={h.query} className="flex items-center gap-2 rounded-xl px-3 py-2.5 hover:bg-white/5 transition-colors group">
+                        <button type="button"
+                          onClick={() => { onSelectHistory(h.query); setShowHistory(false); }}
+                          className="flex-1 text-left text-[13px] text-slate-300 truncate">
+                          {h.query}
+                        </button>
+                        <button type="button" onClick={() => onRemoveHistory(h.query)}
+                          className="opacity-0 group-hover:opacity-100 text-slate-600 hover:text-red-400 transition-all">
+                          <X size={13} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )
+              }
             </motion.div>
           </motion.div>
         )}

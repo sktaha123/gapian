@@ -1,6 +1,6 @@
 import TopNav from '../components/TopNav.jsx';
 
-function DashboardLayout({ children, onGuide }) {
+function DashboardLayout({ children, onGuide, onVault, onHistory }) {
   return (
     <div className="relative min-h-screen overflow-hidden bg-[#05070B] text-[#F8FAFC]">
       
@@ -18,10 +18,10 @@ function DashboardLayout({ children, onGuide }) {
       </div>
 
       {/* Navigation */}
-      <TopNav onGuide={onGuide} />
+      <TopNav onGuide={onGuide} onVault={onVault} onHistory={onHistory} />
 
       {/* Main Content */}
-      <main className="relative z-10 mx-auto max-w-7xl px-5 pt-28 pb-40 sm:px-8 lg:px-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-5 pt-24 pb-52 sm:px-8 lg:px-12">
         {children}
       </main>
     </div>

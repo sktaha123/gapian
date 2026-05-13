@@ -1,183 +1,231 @@
-// Confirmed-available models for this API key (verified via ListModels).
-// Ordered best → fastest fallback.
-const GEMINI_MODELS = [
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-lite:generateContent',
-];
+// Available models — ordered best → fastest fallback
+const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
+const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 
-/**
- * Fetch digital product ideas from Gemini API.
- * Tries each model in GEMINI_MODELS until one succeeds.
- *
- * @param {string} prompt
- * @param {number} count
- * @returns {Promise<Array<{id:string, title:string, headline:string, description:string}>>}
- */
-export async function fetchProductIdeas(prompt, count) {
-  const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
+// In-memory cache (per session)
+const cache = new Map();
 
-  if (!apiKey) {
-    throw new Error('VITE_GEMINI_API_KEY is not set. Add it to your .env file.');
-  }
-
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared fetch helper — retries across models on HTTP / network failure only
+// ─────────────────────────────────────────────────────────────────────────────
+async function callGemini(apiKey, prompt, extraConfig = {}) {
   const body = {
-    contents: [
-      {
-        parts: [
-          {
-            text: [
-              `You are a digital product strategist. Generate exactly ${count} premium digital product ideas for this niche or query: "${prompt}".`,
-              '',
-              'Return ONLY a valid JSON array with no extra text, no markdown, no code fences.',
-              'Each item must have exactly these three fields:',
-              '  "title"       — short product name (4–8 words)',
-              '  "headline"    — punchy positioning statement (10–18 words)',
-              '  "description" — concise launch-ready description (2–3 sentences)',
-              '',
-              'Example format:',
-              '[',
-              '  {',
-              '    "title": "AI Fitness Planner",',
-              '    "headline": "The smartest way to build a personalized workout business.",',
-              '    "description": "An AI-driven fitness planning tool that creates bespoke workout and nutrition plans for clients. Designed for personal trainers and coaches who want to scale their services without sacrificing quality."',
-              '  }',
-              ']'
-            ].join('\n')
-          }
-        ]
-      }
-    ],
+    contents: [{ parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.9,
-      maxOutputTokens: 2048
-    }
+      maxOutputTokens: 4096,
+      responseMimeType: 'application/json',
+      ...extraConfig,
+    },
   };
 
-  const errors = [];
-
-  // Try each model in order — stop at the first success
-  for (const modelUrl of GEMINI_MODELS) {
-    const url = `${modelUrl}?key=${apiKey}`;
-
+  const httpErrors = [];
+  for (const model of GEMINI_MODELS) {
+    const url = `${BASE}/${model}:generateContent?key=${apiKey}`;
+    let responseText;
     try {
-      const response = await fetch(url, {
+      const res = await fetch(url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
+        body: JSON.stringify(body),
       });
-
-      const responseText = await response.text();
-
-      if (!response.ok) {
-        // 404 = model not available for this key — try next
-        // Other errors we still skip and try next model
+      responseText = await res.text();
+      if (!res.ok) {
         let detail = responseText;
-        try {
-          detail = JSON.parse(responseText)?.error?.message || responseText;
-        } catch { /* use raw */ }
-        errors.push(`[${modelUrl.match(/models\/([^:]+)/)?.[1] ?? 'unknown'}] ${response.status}: ${detail}`);
-        console.warn(`Gemini model unavailable, trying next…`, errors.at(-1));
+        try { detail = JSON.parse(responseText)?.error?.message || responseText; } catch {}
+        if (res.status === 429) throw new Error('Rate limit reached. Please wait a moment and try again.');
+        httpErrors.push(`[${model}] ${res.status}: ${detail}`);
         continue;
       }
-
-      // Success — parse and return
-      console.info(`Gemini: using model ${modelUrl.match(/models\/([^:]+)/)?.[1]}`);
-      return extractAndParseIdeas(responseText, prompt, count);
-
-    } catch (networkError) {
-      errors.push(`[network] ${networkError?.message}`);
-      console.warn('Gemini network error, trying next model…', networkError);
+    } catch (err) {
+      if (err.message.includes('Rate limit')) throw err;
+      httpErrors.push(`[${model}] Network: ${err.message}`);
       continue;
     }
+    // HTTP success — parse and return text content
+    return extractText(responseText);
   }
-
-  // All models failed
-  throw new Error(
-    `All Gemini models failed for this API key. Last errors:\n${errors.slice(-3).join('\n')}`
-  );
+  throw new Error(`All models failed:\n${httpErrors.join('\n')}`);
 }
 
-// ---------------------------------------------------------------------------
+function extractText(responseText) {
+  try {
+    const envelope = JSON.parse(responseText);
+    return envelope?.candidates?.[0]?.content?.parts?.[0]?.text ?? responseText;
+  } catch {
+    return responseText;
+  }
+}
+
+function getApiKey() {
+  const k = import.meta.env.VITE_GEMINI_API_KEY;
+  if (!k) throw new Error('VITE_GEMINI_API_KEY is not set. Add it to your .env file or Vercel environment variables.');
+  return k;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Main idea generation (enriched schema)
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchProductIdeas(prompt, count, options = {}) {
+  const { language = 'English', creatorType = '' } = options;
+  const cacheKey = `ideas:${prompt}:${count}:${language}:${creatorType}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const apiKey = getApiKey();
+  const creatorHint = creatorType ? ` The creator type is: ${creatorType}.` : '';
+  const langHint    = language !== 'English' ? ` Respond in ${language}.` : '';
+
+  const prompt_ = [
+    `You are a digital product strategist.${creatorHint}${langHint}`,
+    `Generate exactly ${count} premium digital product ideas for: "${prompt}".`,
+    '',
+    'Return ONLY a valid JSON array. Each item MUST have these fields:',
+    '  "title"       — product name (4-8 words)',
+    '  "headline"    — punchy positioning statement (10-18 words)',
+    '  "description" — launch-ready description (2-3 sentences)',
+    '  "score"       — market opportunity integer 1-10',
+    '  "tags"        — array of 1-3 category strings e.g. ["SaaS","Productivity"]',
+    '  "pricing"     — suggested pricing string e.g. "$29/mo or $149 one-time"',
+    '  "audience"    — one-sentence target audience description',
+    '',
+    'No markdown, no code fences, no extra text.',
+  ].join('\n');
+
+  const raw  = await callGemini(apiKey, prompt_);
+  const ideas = parseArray(raw).map((item, i) => normalizeIdea(item, prompt, i));
+
+  cache.set(cacheKey, ideas);
+  return ideas;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. On-demand deep-dive for a single idea
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchIdeaDetails(idea) {
+  const apiKey = getApiKey();
+  const cacheKey = `details:${idea.id}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `Analyze this digital product idea: "${idea.title}" — ${idea.headline}`,
+    '',
+    'Return ONLY a valid JSON object with these fields:',
+    '  "competitors"     — array of 4 existing competitor names (strings)',
+    '  "gap"             — one sentence on your unique differentiation',
+    '  "roadmap"         — object with keys "day30", "day60", "day90", each an array of 3 action strings',
+    '  "seoKeywords"     — array of 8 SEO keyword strings',
+    '  "emailSubjects"   — array of 5 email subject line strings',
+    '  "twitterThread"   — array of 5 tweet strings (each max 280 chars)',
+    '  "revenueEstimate" — string like "$3,000-$10,000/mo at 200 users"',
+    '',
+    'No markdown, no extra text.',
+  ].join('\n');
+
+  const raw    = await callGemini(apiKey, prompt, { temperature: 0.7 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Refine all results with a follow-up instruction
+// ─────────────────────────────────────────────────────────────────────────────
+export async function fetchRefinedIdeas(ideas, instruction, count) {
+  const apiKey = getApiKey();
+
+  const existing = ideas.map(i => i.title).join(', ');
+  const prompt = [
+    `You previously generated these product ideas: ${existing}.`,
+    `Now refine them based on this instruction: "${instruction}".`,
+    `Return exactly ${count} improved ideas as a JSON array with the same fields:`,
+    '  "title", "headline", "description", "score" (1-10), "tags" (array), "pricing", "audience"',
+    'No markdown, no extra text.',
+  ].join('\n');
+
+  const raw = await callGemini(apiKey, prompt);
+  return parseArray(raw).map((item, i) => normalizeIdea(item, instruction, i));
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Compare two ideas head-to-head
+// ─────────────────────────────────────────────────────────────────────────────
+export async function compareIdeas(ideaA, ideaB) {
+  const apiKey = getApiKey();
+  const cacheKey = `compare:${ideaA.id}:${ideaB.id}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `Compare these two digital product ideas head-to-head:`,
+    `A: "${ideaA.title}" — ${ideaA.headline}`,
+    `B: "${ideaB.title}" — ${ideaB.headline}`,
+    '',
+    'Return ONLY a valid JSON object with:',
+    '  "winner"         — "A" or "B"',
+    '  "summary"        — 2-sentence overall comparison',
+    '  "categories"     — array of 5 objects: { "label": string, "a": string, "b": string, "winner": "A"|"B" }',
+    '    Use labels: "Market Size", "Competition", "Monetization", "Build Difficulty", "Time to Revenue"',
+    '  "recommendation" — 2-sentence final recommendation',
+    'No markdown, no extra text.',
+  ].join('\n');
+
+  const raw    = await callGemini(apiKey, prompt, { temperature: 0.6 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Parsing helpers
-// ---------------------------------------------------------------------------
-
-function extractAndParseIdeas(responseText, prompt, count) {
-  let envelope = null;
-  try {
-    envelope = JSON.parse(responseText);
-  } catch {
-    return parseJsonArray(responseText, prompt, count);
-  }
-
-  // Standard Gemini response: candidates[0].content.parts[0].text
-  const text = envelope?.candidates?.[0]?.content?.parts?.[0]?.text ?? null;
-
-  if (typeof text === 'string') {
-    return parseJsonArray(text, prompt, count);
-  }
-
-  return parseJsonArray(responseText, prompt, count);
-}
-
-function parseJsonArray(text, prompt, count) {
-  const cleaned = text.trim();
-
-  // Strip markdown code fences if present
-  const stripped = cleaned
-    .replace(/^```json\s*/i, '')
-    .replace(/^```\s*/i, '')
-    .replace(/```\s*$/i, '')
+// ─────────────────────────────────────────────────────────────────────────────
+function stripFences(text) {
+  return text.trim()
+    .replace(/^```json\s*/im, '').replace(/^```\s*/im, '').replace(/```\s*$/im, '')
     .trim();
+}
 
-  // Try direct parse
-  let parsed = tryParse(stripped);
-  if (Array.isArray(parsed)) {
-    return normalizeIdeas(parsed, prompt, count);
-  }
+function parseArray(text) {
+  const s = stripFences(text);
+  let parsed = tryParse(s);
+  if (Array.isArray(parsed)) return parsed;
 
-  // Try bracket extraction
-  const start = stripped.indexOf('[');
-  const end = stripped.lastIndexOf(']');
-  if (start !== -1 && end > start) {
-    parsed = tryParse(stripped.slice(start, end + 1));
-    if (Array.isArray(parsed)) {
-      return normalizeIdeas(parsed, prompt, count);
+  // bracket extraction
+  const start = s.indexOf('[');
+  if (start !== -1) {
+    let depth = 0, end = -1;
+    for (let i = start; i < s.length; i++) {
+      if (s[i] === '[') depth++;
+      else if (s[i] === ']' && --depth === 0) { end = i; break; }
     }
+    if (end > start) { parsed = tryParse(s.slice(start, end + 1)); if (Array.isArray(parsed)) return parsed; }
   }
-
-  throw new Error(
-    'Gemini returned a response that could not be parsed as JSON. ' +
-    'Raw: ' + text.slice(0, 300)
-  );
+  throw new Error('Could not parse AI response as JSON array.\nRaw: ' + text.slice(0, 300));
 }
 
-function tryParse(text) {
-  try {
-    return JSON.parse(text);
-  } catch {
-    return null;
-  }
+function parseObject(text) {
+  const s = stripFences(text);
+  let parsed = tryParse(s);
+  if (parsed && typeof parsed === 'object') return parsed;
+
+  const start = s.indexOf('{');
+  const end   = s.lastIndexOf('}');
+  if (start !== -1 && end > start) { parsed = tryParse(s.slice(start, end + 1)); if (parsed) return parsed; }
+  throw new Error('Could not parse AI response as JSON object.\nRaw: ' + text.slice(0, 300));
 }
 
-function normalizeIdeas(rawItems, prompt, count) {
-  if (!Array.isArray(rawItems) || rawItems.length === 0) {
-    throw new Error('Gemini returned an empty array.');
-  }
+function tryParse(text) { try { return JSON.parse(text); } catch { return null; } }
 
-  return rawItems.slice(0, count).map((item, index) => ({
-    id: `${Date.now()}-${index}`,
-    title:
-      typeof item?.title === 'string' && item.title.trim()
-        ? item.title.trim()
-        : `${prompt} Idea ${index + 1}`,
-    headline:
-      typeof item?.headline === 'string' && item.headline.trim()
-        ? item.headline.trim()
-        : 'A premium digital product concept for modern creators.',
-    description:
-      typeof item?.description === 'string' && item.description.trim()
-        ? item.description.trim()
-        : 'A refined concept focused on market-ready positioning and creator-first differentiation.'
-  }));
+function normalizeIdea(item, prompt, index) {
+  const score = Number(item?.score);
+  return {
+    id:          `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+    title:       str(item?.title)       || `${prompt} Idea ${index + 1}`,
+    headline:    str(item?.headline)    || 'A premium digital product concept.',
+    description: str(item?.description) || 'A refined concept for modern creators.',
+    score:       Number.isFinite(score) && score >= 1 && score <= 10 ? score : 7,
+    tags:        Array.isArray(item?.tags) ? item.tags.filter(Boolean).slice(0, 3) : [],
+    pricing:     str(item?.pricing)     || 'TBD',
+    audience:    str(item?.audience)    || 'Creators and entrepreneurs.',
+  };
 }
+
+function str(v) { return typeof v === 'string' && v.trim() ? v.trim() : ''; }
