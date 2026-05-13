@@ -15,9 +15,8 @@ const cache = new Map();
  */
 async function callGemini(prompt, extraConfig = {}) {
   // --- PRODUCTION ROUTING ---
-  // If not on localhost, use the Backend API route
-  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-  if (!isLocal) {
+  // If in Production, use the Backend API route instead of the local bridge
+  if (import.meta.env.PROD) {
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
