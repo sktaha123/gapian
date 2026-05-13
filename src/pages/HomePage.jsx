@@ -91,7 +91,12 @@ function HomePage() {
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    window.scrollTo(0, 0);
+    // Robust reset for mobile/desktop
+    setTimeout(() => {
+      window.scrollTo(0, 0);
+      document.body.scrollTo(0, 0);
+      document.documentElement.scrollTo(0, 0);
+    }, 10);
     setShowTrends(false); setShowHistory(false);
     setStatus('loading'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]);
     try {
