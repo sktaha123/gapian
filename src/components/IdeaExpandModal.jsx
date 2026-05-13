@@ -6,11 +6,11 @@ import { fetchIdeaDetails } from '../services/geminiService.js';
 function Section({ title, icon, children, defaultOpen = false }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="rounded-xl border border-white/6 overflow-hidden">
+    <div className="rounded-2xl border border-white/5 overflow-hidden transition-all duration-300">
       <button
         type="button"
         onClick={() => setOpen(o => !o)}
-        className="flex w-full items-center justify-between px-5 py-4 text-left hover:bg-white/[0.02] transition-colors"
+        className="flex w-full items-center justify-between px-6 py-5 text-left hover:bg-white/[0.01] transition-colors"
       >
         <div className="flex items-center gap-2.5 text-[14px] font-medium text-slate-200">
           {icon}<span>{title}</span>
@@ -52,17 +52,21 @@ function IdeaExpandModal({ idea, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/70 pt-[64px] px-3 pb-4 backdrop-blur-sm sm:pt-[72px] sm:px-4 sm:pb-6"
+      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4 pb-6 backdrop-blur-md"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
+      <style>{`
+        .modal-scroll-hide::-webkit-scrollbar { display: none; }
+        .modal-scroll-hide { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
       <motion.div
-        className="relative flex w-full max-w-2xl flex-col rounded-2xl border border-white/[0.07] bg-[#080E1A] shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 80px)' }}
-        initial={{ opacity: 0, y: 16, scale: 0.97 }}
+        className="relative flex w-full max-w-2xl flex-col rounded-[32px] border border-white/[0.08] bg-[#0A101E] shadow-2xl"
+        style={{ maxHeight: '85vh' }}
+        initial={{ opacity: 0, y: 30, scale: 0.98 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 16 }}
-        transition={{ duration: 0.22 }}
+        exit={{ opacity: 0, y: 30 }}
+        transition={{ type: 'spring', damping: 25, stiffness: 300 }}
         onClick={e => e.stopPropagation()}
       >
         {/* Ambient glow */}
@@ -70,28 +74,28 @@ function IdeaExpandModal({ idea, onClose }) {
           <div className="absolute top-0 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-blue-500/10 blur-[60px]" />
         </div>
 
-        {/* Header — fixed at top of modal, never scrolls */}
-        <div className="relative shrink-0 flex items-start justify-between gap-4 border-b border-white/[0.06] bg-[#080E1A]/95 p-6 backdrop-blur-xl rounded-t-2xl">
+        {/* Header */}
+        <div className="relative shrink-0 flex items-start justify-between gap-6 p-8 rounded-t-[32px]">
           <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-2">
+            <div className="flex flex-wrap items-center gap-2 mb-3">
               {idea.tags?.map(t => (
-                <span key={t} className="rounded-full border border-white/10 bg-white/[0.05] px-2 py-0.5 text-[10px] font-medium text-slate-400">{t}</span>
+                <span key={t} className="rounded-full border border-white/10 bg-white/[0.05] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-slate-500">{t}</span>
               ))}
-              <span className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
-                style={{ background: `${scoreColor}18`, color: scoreColor, border: `1px solid ${scoreColor}30` }}>
-                {idea.score}/10
+              <span className="rounded-full px-2.5 py-1 text-[11px] font-bold"
+                style={{ background: `${scoreColor}12`, color: scoreColor, border: `1px solid ${scoreColor}20` }}>
+                {idea.score}
               </span>
             </div>
-            <h2 className="text-[22px] font-semibold leading-tight text-slate-100">{idea.title}</h2>
-            <p className="mt-1 text-[14px] text-blue-200/80">{idea.headline}</p>
+            <h2 className="text-2xl font-semibold tracking-tight text-slate-50">{idea.title}</h2>
+            <p className="mt-2 text-[15px] leading-relaxed text-blue-200/50">{idea.headline}</p>
           </div>
-          <button type="button" onClick={onClose} className="shrink-0 rounded-full p-1.5 text-slate-500 transition-colors hover:bg-white/10 hover:text-white">
-            <X size={18} />
+          <button type="button" onClick={onClose} className="shrink-0 mt-1 rounded-full p-2 text-slate-500 transition-all hover:bg-white/5 hover:text-white">
+            <X size={20} />
           </button>
         </div>
 
-        {/* Body — scrolls independently */}
-        <div className="relative flex-1 overflow-y-auto p-6 space-y-3">
+        {/* Body */}
+        <div className="relative flex-1 overflow-y-auto modal-scroll-hide p-8 pt-0 space-y-4">
           {/* Overview */}
           <div className="rounded-xl border border-white/6 p-5 space-y-3">
             <p className="text-[14px] leading-relaxed text-slate-400">{idea.description}</p>
