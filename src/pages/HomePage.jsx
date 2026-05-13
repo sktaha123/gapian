@@ -91,6 +91,7 @@ function HomePage() {
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
     if (!trimmed) return;
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     setShowTrends(false); setShowHistory(false);
     setStatus('loading'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]);
     try {
