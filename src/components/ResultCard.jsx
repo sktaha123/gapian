@@ -90,11 +90,20 @@ function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggl
         {/* Pricing + Audience */}
         <div className="mt-4 space-y-1.5 border-t border-white/5 pt-4">
           <div className="flex items-center gap-2 text-[12px] text-slate-500">
-            <span className="text-slate-400 font-medium">💰</span>
+            {/* Dollar / Pricing icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-emerald-400/80">
+              <line x1="12" y1="1" x2="12" y2="23" />
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+            </svg>
             <span>{idea.pricing}</span>
           </div>
           <div className="flex items-center gap-2 text-[12px] text-slate-500">
-            <span className="text-slate-400 font-medium">🎯</span>
+            {/* Target / Audience icon */}
+            <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 text-blue-400/80">
+              <circle cx="12" cy="12" r="10" />
+              <circle cx="12" cy="12" r="6" />
+              <circle cx="12" cy="12" r="2" />
+            </svg>
             <span className="line-clamp-1">{idea.audience}</span>
           </div>
         </div>

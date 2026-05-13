@@ -20,13 +20,13 @@ function CompareModal({ ideaA, ideaB, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/70 pt-[72px] px-4 pb-6 backdrop-blur-sm"
+      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/70 pt-[64px] px-3 pb-4 backdrop-blur-sm sm:pt-[72px] sm:px-4 sm:pb-6"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
       <motion.div
         className="relative flex w-full max-w-2xl flex-col rounded-2xl border border-white/[0.07] bg-[#080E1A] shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 96px)' }}
+        style={{ maxHeight: 'calc(100vh - 80px)' }}
         initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
         transition={{ duration: 0.22 }}
         onClick={e => e.stopPropagation()}
@@ -92,7 +92,9 @@ function CompareModal({ ideaA, ideaB, onClose }) {
                         <th className="px-4 py-3 text-left font-medium text-slate-500">Category</th>
                         <th className="px-4 py-3 text-center font-medium text-slate-400">A</th>
                         <th className="px-4 py-3 text-center font-medium text-slate-400">B</th>
-                        <th className="px-4 py-3 text-center font-medium text-slate-500">🏆</th>
+                        <th className="px-4 py-3 text-center font-medium text-slate-500">
+                          <Trophy size={13} className="mx-auto text-yellow-500/70" />
+                        </th>
                       </tr>
                     </thead>
                     <tbody>

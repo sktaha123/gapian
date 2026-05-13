@@ -31,7 +31,7 @@ function RefinementChat({ ideas, count, onRefined, isLoading }) {
           <span className="text-[12px] font-medium text-slate-400">Refine these results with AI</span>
         </div>
 
-        <form onSubmit={handleSubmit} className="flex items-center gap-3">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
           <input
             type="text"
             value={text}
@@ -43,7 +43,7 @@ function RefinementChat({ ideas, count, onRefined, isLoading }) {
           <button
             type="submit"
             disabled={!text.trim() || isLoading}
-            className="inline-flex h-8 items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 text-[12px] font-medium text-blue-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed"
+            className="inline-flex h-8 w-full items-center justify-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 text-[12px] font-medium text-blue-300 transition-all hover:border-blue-500/50 hover:bg-blue-500/20 disabled:opacity-40 disabled:cursor-not-allowed sm:w-auto"
           >
             {isLoading
               ? <Loader2 size={12} className="animate-spin" />

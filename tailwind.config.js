@@ -40,6 +40,10 @@ export default {
         "2xl": "1.25rem"
       },
 
+      screens: {
+        xs: '480px'
+      },
+
       transitionTimingFunction: {
         smooth: "cubic-bezier(0.4, 0, 0.2, 1)"
       }

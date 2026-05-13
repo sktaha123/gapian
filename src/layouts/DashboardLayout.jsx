@@ -21,7 +21,7 @@ function DashboardLayout({ children, onGuide, onVault, onHistory }) {
       <TopNav onGuide={onGuide} onVault={onVault} onHistory={onHistory} />
 
       {/* Main Content */}
-      <main className="relative z-10 mx-auto max-w-7xl px-5 pt-24 pb-52 sm:px-8 lg:px-12">
+      <main className="relative z-10 mx-auto max-w-7xl px-4 pt-20 pb-44 sm:px-6 sm:pt-24 sm:pb-48 lg:px-12 lg:pb-52">
         {children}
       </main>
     </div>

@@ -36,9 +36,9 @@ function SearchBar({
   return (
     <>
       {/* SEARCH BAR */}
-      <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-4 md:pb-2">
+      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4">
         <div className="mx-auto w-full max-w-3xl">
-          <div className="relative rounded-[24px] p-[1px] overflow-hidden shadow-2xl">
+          <div className="relative rounded-[22px] p-[1px] overflow-hidden shadow-2xl sm:rounded-[24px]">
 
             {/* Animated border */}
             <div className="pointer-events-none absolute inset-0 z-0">
@@ -50,46 +50,46 @@ function SearchBar({
             </div>
 
             {/* Content */}
-            <div className="relative z-10 flex flex-col rounded-[23px] bg-[#0B1220]/90 p-2 backdrop-blur-xl">
+            <div className="relative z-10 flex flex-col rounded-[21px] bg-[#0B1220]/90 p-2 backdrop-blur-xl sm:rounded-[23px]">
 
               {/* Input row */}
-              <div className="flex items-center gap-3 px-3 py-2">
-                <Search size={18} className="text-slate-400 shrink-0" />
+              <div className="flex items-center gap-2 px-2 py-1.5 sm:gap-3 sm:px-3 sm:py-2">
+                <Search size={16} className="text-slate-400 shrink-0 sm:w-[18px] sm:h-[18px]" />
                 <input
                   type="text"
                   value={query}
                   onChange={e => onQueryChange(e.target.value)}
                   onKeyDown={e => e.key === 'Enter' && onSearch()}
                   placeholder="I am looking for..."
-                  className="flex-1 bg-transparent text-[15px] font-medium text-slate-100 placeholder:text-slate-500 outline-none min-w-0"
+                  className="flex-1 bg-transparent text-[14px] font-medium text-slate-100 placeholder:text-slate-500 outline-none min-w-0 sm:text-[15px]"
                 />
                 <button
                   type="button"
                   onClick={onSearch}
                   disabled={!query.trim() || isLoading}
-                  className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-all duration-300 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600"
+                  className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white transition-all duration-300 hover:bg-blue-500 disabled:opacity-40 disabled:hover:bg-blue-600 sm:h-9 sm:w-9"
                 >
-                  <ArrowUpRight size={18} strokeWidth={2.5} />
+                  <ArrowUpRight size={16} strokeWidth={2.5} className="sm:w-[18px] sm:h-[18px]" />
                 </button>
               </div>
 
               <div className="mx-2 h-px bg-white/5" />
 
-              {/* Controls row — single line, no wrap, overflow scrollable */}
-              <div className="flex items-center justify-between gap-2 px-2 pt-2 pb-1 overflow-x-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {/* Controls row — responsive two-section layout */}
+              <div className="flex items-center justify-between gap-1.5 px-2 pt-1.5 pb-1 sm:gap-2">
 
                 {/* Left: Trends + History */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                <div className="flex items-center gap-1 shrink-0 sm:gap-1.5">
                   <button type="button"
                     onClick={() => { setShowTrends(t => !t); setShowHistory(false); }}
-                    className="inline-flex h-7 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-xs font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap">
-                    <Sparkles size={11} className="text-blue-400" /><span>Trends</span>
+                    className="inline-flex h-6 items-center gap-1 rounded-full border border-white/5 bg-white/5 px-2 text-[11px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
+                    <Sparkles size={10} className="text-blue-400 sm:w-[11px] sm:h-[11px]" /><span>Trends</span>
                   </button>
 
                   <button type="button"
                     onClick={() => { setShowHistory(h => !h); setShowTrends(false); }}
-                    className="inline-flex h-7 items-center gap-1.5 rounded-full border border-white/5 bg-white/5 px-3 text-xs font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap">
-                    <Clock size={11} className="text-slate-400" /><span>History</span>
+                    className="inline-flex h-6 items-center gap-1 rounded-full border border-white/5 bg-white/5 px-2 text-[11px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
+                    <Clock size={10} className="text-slate-400 sm:w-[11px] sm:h-[11px]" /><span>History</span>
                   </button>
 
                   {/* Desktop trend pills — inline */}
@@ -115,10 +115,10 @@ function SearchBar({
                   </div>
                 </div>
 
-                {/* Right: selects — single line, no wrap */}
-                <div className="flex items-center gap-1.5 shrink-0">
+                {/* Right: selects */}
+                <div className="flex items-center gap-1 shrink-0 sm:gap-1.5">
                   <select value={language} onChange={e => onLanguageChange(e.target.value)}
-                    className="h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
+                    className="h-6 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-1.5 text-[11px] font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none sm:h-7 sm:px-2 sm:text-xs">
                     {LANGUAGES.map(l => <option key={l} value={l}>{l}</option>)}
                   </select>
 
@@ -130,8 +130,8 @@ function SearchBar({
                   </select>
 
                   <select value={quantity} onChange={e => onQuantityChange(Number(e.target.value))}
-                    className="h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
-                    {[3, 5, 10, 20].map(n => <option key={n} value={n}>{n} results</option>)}
+                    className="h-6 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-1.5 text-[11px] font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none sm:h-7 sm:px-2 sm:text-xs">
+                    {[3, 5, 10, 20].map(n => <option key={n} value={n}>{n}</option>)}
                   </select>
                 </div>
               </div>

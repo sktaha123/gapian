@@ -161,7 +161,7 @@ function HomePage() {
               </div>
               <motion.h1
                 initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-                className="relative mt-7 max-w-3xl text-4xl font-semibold leading-[1] tracking-[-0.05em] text-[#F8FAFC] sm:text-5xl"
+                className="relative mt-7 max-w-3xl text-[28px] font-semibold leading-[1.1] tracking-[-0.04em] text-[#F8FAFC] sm:text-4xl lg:text-5xl"
               >
                 Discover digital product ideas
                 <span className="mt-2 block text-[#A5C4FF]">powered by AI intelligence.</span>
@@ -193,7 +193,7 @@ function HomePage() {
             >
               <div className="space-y-4">
                 <p className="text-sm text-[#7DA2FF]">Generating {quantity} concepts…</p>
-                <h2 className="text-4xl font-display font-semibold tracking-[-0.05em] text-[#F8FAFC]">Working on it</h2>
+                  <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">Working on it</h2>
                 {/* Progress bar */}
                 <div className="h-0.5 w-full max-w-xs overflow-hidden rounded-full bg-white/5">
                   <motion.div
@@ -217,12 +217,12 @@ function HomePage() {
               transition={{ duration: 0.35 }} className="space-y-6"
             >
               {/* Header row */}
-              <div className="flex items-center justify-between">
-                <div className="space-y-1">
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-0.5">
                   <p className="text-sm text-[#7DA2FF]">{filteredResults.length} concepts{activeTag ? ` · ${activeTag}` : ''}</p>
-                  <h2 className="text-4xl font-display font-semibold tracking-[-0.05em] text-[#F8FAFC]">Generated concepts</h2>
+                  <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">Generated concepts</h2>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   {/* Compare button */}
                   {compareSet.length === 2 && (
                     <motion.button
