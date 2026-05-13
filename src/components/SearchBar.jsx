@@ -1,12 +1,5 @@
-import {
-  ArrowUpRight,
-  Sparkles
-} from 'lucide-react';
-
-import {
-  motion,
-  AnimatePresence
-} from 'framer-motion';
+import { ArrowUpRight, Sparkles, Search } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 const trendingTopics = [
   'Fitness',
@@ -27,54 +20,108 @@ function SearchBar({
   setShowTrends,
   onSelectTrend
 }) {
+
+  // DEFINED HERE: Variables must be outside the JSX return block
+  const snakeDashArray = "35 65"; 
+  const animationProps = {
+    initial: { strokeDashoffset: 100 },
+    animate: { strokeDashoffset: 0 },
+    transition: {
+      duration: 10, 
+      repeat: Infinity,
+      ease: "linear"
+    }
+  };
+
   return (
     <>
-      {/* SEARCH BAR */}
-      <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-1">
+      {/* SEARCH BAR CONTAINER */}
+      <div className="fixed inset-x-0 bottom-0 z-50 px-4 pb-6 md:pb-2">
         <div className="mx-auto w-full max-w-3xl">
+          
+          {/* Main Container with BIG GLOWY Snake Effect */}
+          <div className="relative rounded-[24px] p-[1px] overflow-hidden shadow-2xl">
+            
+            {/* 1. The Big Glowy Snake Layer (behind content) */}
+            <div className="pointer-events-none absolute inset-0 z-0">
+              <svg className="h-full w-full overflow-visible">
+                {/* A. The static base border (very subtle) */}
+                <rect
+                  width="100%"
+                  height="100%"
+                  rx="24"
+                  fill="none"
+                  stroke="rgba(255,255,255,0.05)"
+                  strokeWidth="1"
+                />
+                
+                {/* B. The Glow Layer (thicker, blurred blue) */}
+                <motion.rect
+                  width="100%"
+                  height="100%"
+                  rx="24"
+                  fill="none"
+                  stroke="#3B82F6" // Blue-600
+                  strokeWidth="4" // Thicker for glow base
+                  strokeLinecap="round"
+                  pathLength="100" 
+                  strokeDasharray={snakeDashArray}
+                  {...animationProps}
+                  className="opacity-60 blur-[6px]"
+                />
 
-          <div
-            className="
-              relative
-              overflow-hidden
-              rounded-[28px]
-              bg-[#0B1220]/88
-              backdrop-blur-3xl
-            "
-          >
-
-            {/* Ambient Glow */}
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_45%)]" />
+                {/* C. The Core Light Layer (thinner, bright blue) */}
+                <motion.rect
+                  width="100%"
+                  height="100%"
+                  rx="24"
+                  fill="none"
+                  stroke="#93C5FD" // Blue-300 (brighter core)
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  pathLength="100" 
+                  strokeDasharray={snakeDashArray}
+                  {...animationProps}
+                />
+              </svg>
             </div>
 
-            {/* CONTENT */}
-            <div className="relative px-5 py-4">
-
-              {/* INPUT ROW */}
-              <div className="flex items-center gap-3">
-
-                {/* INPUT */}
+            {/* 2. Content Container (Masks the inner area) */}
+            <div 
+              className="
+                relative 
+                z-10 
+                flex 
+                flex-col 
+                rounded-[23px] 
+                bg-[#0B1220]/90 
+                p-2 
+                backdrop-blur-xl
+              "
+            >
+              {/* TOP ROW: INPUT */}
+              <div className="flex items-center gap-3 px-3 py-2">
+                <Search size={18} className="text-slate-400 group-focus-within:text-blue-300" />
+                
                 <div className="flex-1">
                   <input
                     type="text"
                     value={query}
-                    onChange={(event) =>
-                      onQueryChange(event.target.value)
-                    }
+                    onChange={(event) => onQueryChange(event.target.value)}
                     placeholder="I am looking for..."
                     className="
                       w-full
                       bg-transparent
                       text-[15px]
-                      text-[#F8FAFC]
-                      placeholder:text-[#64748B]
+                      font-medium
+                      text-slate-100
+                      placeholder:text-slate-500
                       outline-none
                     "
                   />
                 </div>
 
-                {/* GENERATE */}
+                {/* GENERATE BUTTON */}
                 <button
                   type="button"
                   onClick={onSearch}
@@ -83,109 +130,95 @@ function SearchBar({
                     inline-flex
                     h-9
                     w-9
+                    shrink-0
                     items-center
                     justify-center
                     rounded-full
-                    bg-[#3B82F6]
+                    bg-blue-600
                     text-white
                     transition-all
                     duration-300
-                    hover:bg-[#2563EB]
-                    disabled:opacity-50
+                    hover:bg-blue-500
+                    disabled:opacity-40
+                    disabled:hover:bg-blue-600
                   "
                 >
-                  <ArrowUpRight size={15} />
+                  <ArrowUpRight size={18} strokeWidth={2.5} />
                 </button>
               </div>
 
-              {/* CONTROLS */}
-              <div className="mt-4 flex items-center justify-between">
+              {/* SEPARATOR */}
+              <div className="mx-2 h-px bg-white/5" />
 
-                {/* LEFT */}
-                <div className="flex items-center gap-2 overflow-hidden">
-
-                  {/* TRENDS BUTTON */}
+              {/* BOTTOM ROW: CONTROLS */}
+              <div className="flex items-center justify-between px-2 pt-2 pb-1">
+                
+                {/* LEFT: TRENDS */}
+                <div 
+                  className="
+                    flex 
+                    items-center 
+                    gap-2 
+                    overflow-x-auto 
+                    [&::-webkit-scrollbar]:hidden 
+                    [-ms-overflow-style:none] 
+                    [scrollbar-width:none]
+                  "
+                >
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowTrends(!showTrends)
-                    }
+                    onClick={() => setShowTrends(!showTrends)}
                     className="
                       inline-flex
-                      h-8
+                      h-7
+                      shrink-0
                       items-center
-                      gap-2
+                      gap-1.5
                       rounded-full
                       border
-                      border-white/[0.06]
-                      bg-white/[0.03]
+                      border-white/5
+                      bg-white/5
                       px-3
                       text-xs
-                      text-[#CBD5E1]
+                      font-medium
+                      text-slate-300
                       transition-all
-                      duration-300
-                      hover:border-[#3B82F6]/30
-                      hover:bg-[#3B82F6]/[0.05]
+                      hover:bg-white/10
                       hover:text-white
-                      shrink-0
                     "
                   >
-                    <Sparkles
-                      size={13}
-                      className="text-[#7DA2FF]"
-                    />
-
+                    <Sparkles size={12} className="text-blue-400" />
                     <span>Trends</span>
                   </button>
 
-                  {/* DESKTOP TREND OPTIONS */}
+                  {/* DESKTOP TREND PILLS */}
                   <div className="hidden md:block">
                     <AnimatePresence>
                       {showTrends && (
                         <motion.div
-                          initial={{
-                            opacity: 0,
-                            x: -20
-                          }}
-                          animate={{
-                            opacity: 1,
-                            x: 0
-                          }}
-                          exit={{
-                            opacity: 0,
-                            x: -20
-                          }}
-                          transition={{
-                            duration: 0.25
-                          }}
-                          className="
-                            flex
-                            items-center
-                            gap-2
-                          "
+                          initial={{ opacity: 0, width: 0, x: -10 }}
+                          animate={{ opacity: 1, width: 'auto', x: 0 }}
+                          exit={{ opacity: 0, width: 0, x: -10 }}
+                          className="flex items-center gap-1.5 overflow-hidden"
                         >
                           {trendingTopics.map((topic) => (
                             <button
                               key={topic}
                               type="button"
-                              onClick={() =>
-                                onSelectTrend(topic)
-                              }
+                              onClick={() => onSelectTrend(topic)}
                               className="
                                 whitespace-nowrap
                                 rounded-full
                                 border
-                                border-white/[0.06]
-                                bg-white/[0.03]
-                                px-3
-                                py-1.5
-                                text-xs
-                                text-[#CBD5E1]
+                                border-transparent
+                                px-2.5
+                                py-1
+                                text-[11px]
+                                font-medium
+                                text-slate-400
                                 transition-all
-                                duration-300
-                                hover:border-[#3B82F6]/30
-                                hover:bg-[#3B82F6]/[0.05]
-                                hover:text-white
+                                hover:bg-white/5
+                                hover:text-slate-200
                               "
                             >
                               {topic}
@@ -197,40 +230,30 @@ function SearchBar({
                   </div>
                 </div>
 
-                {/* OUTPUT SELECTOR */}
-                <div
-                  className="
-                    flex
-                    h-8
-                    items-center
-                    rounded-full
-                    border
-                    border-white/[0.06]
-                    bg-white/[0.03]
-                    px-3
-                    shrink-0
-                  "
-                >
+                {/* RIGHT: OUTPUT QUANTITY */}
+                <div className="shrink-0 pl-2">
                   <select
                     value={quantity}
-                    onChange={(event) =>
-                      onQuantityChange(
-                        Number(event.target.value)
-                      )
-                    }
+                    onChange={(event) => onQuantityChange(Number(event.target.value))}
                     className="
+                      h-7
+                      cursor-pointer
+                      rounded-full
+                      border
+                      border-white/5
                       bg-transparent
+                      px-2
                       text-xs
-                      text-[#CBD5E1]
+                      font-medium
+                      text-slate-400
                       outline-none
+                      transition-colors
+                      hover:bg-white/5
+                      hover:text-slate-200
                     "
                   >
                     {[3, 5, 10, 20].map((option) => (
-                      <option
-                        key={option}
-                        value={option}
-                        className="bg-[#0B1220]"
-                      >
+                      <option key={option} value={option} className="bg-[#0B1220] text-slate-200">
                         {option} outputs
                       </option>
                     ))}
@@ -242,7 +265,7 @@ function SearchBar({
         </div>
       </div>
 
-      {/* MOBILE GLOBAL MODAL */}
+      {/* MOBILE TRENDS MODAL */}
       <AnimatePresence>
         {showTrends && (
           <motion.div
@@ -254,73 +277,39 @@ function SearchBar({
               inset-0
               z-[999]
               flex
-              items-center
+              items-end
               justify-center
-              bg-black/60
-              backdrop-blur-md
+              bg-black/40
+              p-4
+              pb-28
+              backdrop-blur-sm
               md:hidden
             "
             onClick={() => setShowTrends(false)}
           >
             <motion.div
-              initial={{
-                opacity: 0,
-                scale: 0.94,
-                y: 20
-              }}
-              animate={{
-                opacity: 1,
-                scale: 1,
-                y: 0
-              }}
-              exit={{
-                opacity: 0,
-                scale: 0.94,
-                y: 20
-              }}
-              transition={{
-                duration: 0.22
-              }}
-              onClick={(e) =>
-                e.stopPropagation()
-              }
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              transition={{ duration: 0.2 }}
+              onClick={(e) => e.stopPropagation()}
               className="
-                relative
-                w-[88%]
+                w-full
                 max-w-[340px]
                 overflow-hidden
-                rounded-[30px]
+                rounded-2xl
                 border
-                border-white/[0.06]
-                bg-[#0B1220]/96
-                p-4
+                border-white/10
+                bg-[#0B1220]/95
+                p-2
                 shadow-2xl
-                backdrop-blur-3xl
+                backdrop-blur-xl
               "
             >
-
-              {/* Glow */}
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_50%)]" />
+              <div className="px-2 py-3 text-center text-xs font-medium text-slate-400">
+                Trending Topics
               </div>
-
-              {/* Header */}
-              <div className="relative mb-4">
-                <h3
-                  className="
-                    text-center
-                    text-[15px]
-                    font-medium
-                    tracking-[-0.03em]
-                    text-[#F8FAFC]
-                  "
-                >
-                  Trending Topics
-                </h3>
-              </div>
-
-              {/* Topics */}
-              <div className="relative flex flex-col gap-2">
+              <div className="flex flex-col gap-1">
                 {trendingTopics.map((topic) => (
                   <button
                     key={topic}
@@ -330,20 +319,15 @@ function SearchBar({
                       setShowTrends(false);
                     }}
                     className="
-                      rounded-2xl
-                      border
-                      border-white/[0.06]
-                      bg-white/[0.03]
+                      rounded-xl
                       px-4
                       py-3
                       text-left
                       text-sm
-                      text-[#CBD5E1]
-                      transition-all
-                      duration-300
-                      hover:border-[#3B82F6]/30
-                      hover:bg-[#3B82F6]/[0.05]
-                      hover:text-white
+                      font-medium
+                      text-slate-200
+                      transition-colors
+                      hover:bg-white/10
                     "
                   >
                     {topic}
