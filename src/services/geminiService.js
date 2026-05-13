@@ -14,6 +14,26 @@ const cache = new Map();
  * This implementation targets the Vertex AI REST API which consumes GCP credits.
  */
 async function callGemini(prompt, extraConfig = {}) {
+  // --- PRODUCTION ROUTING ---
+  // If not on localhost, use the Backend API route
+  const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+  if (!isLocal) {
+    try {
+      const res = await fetch('/api/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Server Error');
+      return data.text;
+    } catch (err) {
+      console.error('Production API Error:', err);
+      throw err;
+    }
+  }
+  // --------------------------
+
   const projectId = import.meta.env.VITE_GCP_PROJECT_ID;
   const location = import.meta.env.VITE_GCP_LOCATION || 'us-central1';
 
