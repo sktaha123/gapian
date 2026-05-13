@@ -112,16 +112,28 @@ function SearchBar({
                   
 
                   {/* Creator type — hidden on very small screens */}
-                  <select value={creatorType} onChange={e => onCreatorTypeChange(e.target.value)}
-                    className="hidden sm:block h-7 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-2 text-xs font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none">
-                    <option value="">Any Creator</option>
-                    {CREATOR_TYPES.map(c => <option key={c} value={c}>{c}</option>)}
-                  </select>
+                  <div className="relative hidden sm:block">
+                    <select 
+                      value={creatorType} 
+                      onChange={e => onCreatorTypeChange(e.target.value)}
+                      className="h-7 w-[120px] cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-3 text-[11px] font-medium text-slate-400 outline-none transition-all hover:bg-white/10 hover:text-slate-200 appearance-none pr-6"
+                    >
+                      <option value="" className="bg-[#0B1220] text-slate-300">Any Creator</option>
+                      {CREATOR_TYPES.map(c => <option key={c} value={c} className="bg-[#0B1220] text-slate-300">{c}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 border-[3.5px] border-transparent border-t-slate-500 mt-[1px]" />
+                  </div>
 
-                  <select value={quantity} onChange={e => onQuantityChange(Number(e.target.value))}
-                    className="h-6 cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-1.5 text-[11px] font-medium text-slate-400 outline-none transition-colors hover:bg-white/5 hover:text-slate-200 appearance-none sm:h-7 sm:px-2 sm:text-xs">
-                    {[3, 5, 10, 20].map(n => <option key={n} value={n}>{n}</option>)}
-                  </select>
+                  <div className="relative">
+                    <select 
+                      value={quantity} 
+                      onChange={e => onQuantityChange(Number(e.target.value))}
+                      className="h-7 w-[65px] cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-3 text-[11px] font-medium text-slate-400 outline-none transition-all hover:bg-white/10 hover:text-slate-200 appearance-none pr-6"
+                    >
+                      {[3, 5, 10, 20].map(n => <option key={n} value={n} className="bg-[#0B1220] text-slate-300">{n}</option>)}
+                    </select>
+                    <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 border-[3.5px] border-transparent border-t-slate-500 mt-[1px]" />
+                  </div>
                 </div>
               </div>
             </div>
