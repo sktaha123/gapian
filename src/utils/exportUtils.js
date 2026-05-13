@@ -1,5 +1,5 @@
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 
 /**
  * Exports a list of ideas to CSV
@@ -56,7 +56,7 @@ export function exportPDF(ideas, filename = 'gapian-results.pdf') {
     idea.pricing
   ]);
 
-  doc.autoTable({
+  autoTable(doc, {
     head: [tableColumn],
     body: tableRows,
     startY: 40,
