@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Search, Sparkles, BarChart2 } from 'lucide-react';
 import { setOnboardingDone } from '../services/storageService.js';
@@ -24,6 +24,16 @@ const STEPS = [
 function OnboardingModal({ open, onClose }) {
   const [step, setStep] = useState(0);
 
+  // Scroll lock
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [open]);
+
   const handleClose = () => {
     setOnboardingDone();
     onClose();
@@ -38,7 +48,7 @@ function OnboardingModal({ open, onClose }) {
     <AnimatePresence>
       {open && (
         <motion.div
-          className="fixed inset-0 z-[300] flex items-start justify-center bg-black/70 pt-24 px-4 pb-8 backdrop-blur-sm overflow-y-auto"
+          className="fixed inset-0 z-[999] flex items-start justify-center bg-black/70 pt-24 px-4 pb-8 backdrop-blur-sm overflow-y-auto"
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         >
           <motion.div

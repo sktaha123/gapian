@@ -1,7 +1,18 @@
+import { useEffect } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { X } from 'lucide-react';
 
 function GuideModal({ open, onClose }) {
+  // Scroll lock
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open ? (
@@ -9,7 +20,7 @@ function GuideModal({ open, onClose }) {
           className="
             fixed
             inset-0
-            z-50
+            z-[999]
             flex
             items-center
             justify-center
