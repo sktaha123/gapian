@@ -194,7 +194,7 @@ function HomePage() {
           {isLoading && (
             <motion.section key="loading"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }} className="space-y-10 pt-12 sm:pt-16"
+              transition={{ duration: 0.35 }} className="space-y-10 pt-4 sm:pt-6"
             >
               <div className="space-y-4">
                 <p className="text-sm text-[#7DA2FF]">Generating {quantity} concepts…</p>
@@ -231,7 +231,7 @@ function HomePage() {
           {isComplete && (
             <motion.section key="results"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35 }} className="space-y-6 pt-12 sm:pt-16"
+              transition={{ duration: 0.35 }} className="space-y-6 pt-4 sm:pt-6"
             >
               {/* Header row */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
