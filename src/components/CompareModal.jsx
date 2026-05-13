@@ -8,6 +8,11 @@ function CompareModal({ ideaA, ideaB, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
 
+  useEffect(() => {
+    let cancelled = false;
+    compareIdeas(ideaA, ideaB)
+      .then(r => { if (!cancelled) { setResult(r); setLoading(false); } })
+      .catch(e => { if (!cancelled) { setError(e.message); setLoading(false); } });
     return () => { cancelled = true; };
   }, [ideaA.id, ideaB.id]);
 
