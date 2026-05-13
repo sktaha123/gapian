@@ -32,8 +32,39 @@ function SearchBar({
   return (
     <>
       {/* SEARCH BAR */}
-      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4">
-        <div className="mx-auto w-full max-w-3xl">
+      <div className="fixed inset-x-0 bottom-0 z-50 px-3 pb-3 sm:px-4 sm:pb-4 pointer-events-none">
+        <div className="mx-auto w-full max-w-3xl pointer-events-auto flex flex-col gap-2">
+          
+          {/* TRENDS TAGS (Expandable Row) */}
+          <AnimatePresence>
+            {showTrends && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.2 }}
+                className="w-full overflow-hidden"
+              >
+                <div className="flex items-center gap-2 overflow-x-auto hide-scrollbar pb-2 pt-1 px-1">
+                  <style>{`
+                    .hide-scrollbar::-webkit-scrollbar { display: none; }
+                    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+                  `}</style>
+                  {TRENDING_TOPICS.map(topic => (
+                    <button
+                      key={topic}
+                      type="button"
+                      onClick={() => { onSelectTrend(topic); setShowTrends(false); }}
+                      className="shrink-0 rounded-full border border-white/10 bg-white/5 backdrop-blur-md px-4 py-1.5 text-[11px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white shadow-sm sm:text-xs"
+                    >
+                      {topic}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <div className="relative rounded-[22px] p-[1px] overflow-hidden shadow-2xl sm:rounded-[24px]">
 
             {/* Animated border */}
@@ -85,28 +116,6 @@ function SearchBar({
                     }`}>
                     <Sparkles size={10} className={showTrends ? 'text-blue-400' : 'text-slate-400 sm:w-[11px] sm:h-[11px]'} /><span>Trends</span>
                   </button>
-
-                  {/* Desktop trend pills — inline */}
-                  <div className="hidden md:block">
-                    <AnimatePresence>
-                      {showTrends && (
-                        <motion.div
-                          initial={{ opacity: 0, width: 0, x: -10 }}
-                          animate={{ opacity: 1, width: 'auto', x: 0 }}
-                          exit={{ opacity: 0, width: 0, x: -10 }}
-                          className="flex items-center gap-1 overflow-hidden"
-                        >
-                          {TRENDING_TOPICS.map(topic => (
-                            <button key={topic} type="button"
-                              onClick={() => { onSelectTrend(topic); setShowTrends(false); }}
-                              className="whitespace-nowrap rounded-full border border-transparent px-2 py-1 text-[11px] font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-slate-200">
-                              {topic}
-                            </button>
-                          ))}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
                 </div>
 
                 {/* Right: selects */}
@@ -143,34 +152,7 @@ function SearchBar({
         </div>
       </div>
 
-      {/* MOBILE TRENDS MODAL */}
-      <AnimatePresence>
-        {showTrends && (
-          <motion.div
-            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[999] flex items-end justify-center bg-black/40 p-4 pb-24 backdrop-blur-sm md:hidden"
-            onClick={() => setShowTrends(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, y: 20, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 20, scale: 0.95 }} transition={{ duration: 0.2 }}
-              onClick={e => e.stopPropagation()}
-              className="w-full max-w-[340px] overflow-hidden rounded-2xl border border-white/10 bg-[#0B1220]/95 p-2 shadow-2xl backdrop-blur-xl"
-            >
-              <div className="px-2 py-3 text-center text-xs font-medium text-slate-400">Trending Topics</div>
-              <div className="flex flex-col gap-1 max-h-60 overflow-y-auto">
-                {TRENDING_TOPICS.map(topic => (
-                  <button key={topic} type="button"
-                    onClick={() => { onSelectTrend(topic); setShowTrends(false); }}
-                    className="rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-200 transition-colors hover:bg-white/10">
-                    {topic}
-                  </button>
-                ))}
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* MOBILE TRENDS MODAL REMOVED - RESTORED ABOVE STYLE */}
 
       {/* HISTORY PANEL */}
       <AnimatePresence>
