@@ -2,7 +2,7 @@ import TopNav from '../components/TopNav.jsx';
 
 function DashboardLayout({ children, onGuide, onVault, onHistory }) {
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#05070B] text-[#F8FAFC]">
+    <div className="relative min-h-screen bg-[#05070B] text-[#F8FAFC]">
       
       {/* Atmospheric Background */}
       <div className="pointer-events-none absolute inset-0">
