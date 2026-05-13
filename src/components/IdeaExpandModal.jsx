@@ -52,7 +52,7 @@ function IdeaExpandModal({ idea, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80 px-4 pb-6 backdrop-blur-md"
+      className="fixed inset-0 z-[999] flex items-start justify-center bg-black/80 px-4 pb-10 pt-24 backdrop-blur-md sm:pt-32"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
