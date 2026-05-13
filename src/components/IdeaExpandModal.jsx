@@ -48,6 +48,12 @@ function IdeaExpandModal({ idea, onClose }) {
     return () => { cancelled = true; };
   }, [idea.id]);
 
+  // Scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
+
   const scoreColor = idea.score >= 8 ? '#10B981' : idea.score >= 6 ? '#3B82F6' : '#F59E0B';
 
   return (

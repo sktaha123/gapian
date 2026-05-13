@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, BookmarkX, Download, Inbox } from 'lucide-react';
 
@@ -14,17 +15,27 @@ function exportCSV(ideas) {
 function SavedVault({ open, onClose, getSaved, onUnsave }) {
   const ideas = open ? getSaved() : [];
 
+  // Scroll lock
+  useEffect(() => {
+    if (open) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [open]);
+
   return (
     <AnimatePresence>
       {open && (
         <>
           <motion.div
-            className="fixed inset-0 z-[150] bg-black/50 backdrop-blur-sm"
+            className="fixed inset-0 z-[990] bg-black/50 backdrop-blur-sm"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={onClose}
           />
           <motion.aside
-            className="fixed right-0 top-0 z-[160] h-full w-full max-w-sm border-l border-white/[0.07] bg-[#07101C] shadow-2xl flex flex-col"
+            className="fixed right-0 top-0 z-[999] h-full w-full max-w-sm border-l border-white/[0.07] bg-[#07101C] shadow-2xl flex flex-col"
             initial={{ x: '100%' }} animate={{ x: 0 }} exit={{ x: '100%' }}
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           >

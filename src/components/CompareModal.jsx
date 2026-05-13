@@ -8,19 +8,20 @@ function CompareModal({ ideaA, ideaB, onClose }) {
   const [loading, setLoading] = useState(true);
   const [error, setError]     = useState('');
 
-  useEffect(() => {
-    let cancelled = false;
-    compareIdeas(ideaA, ideaB)
-      .then(r => { if (!cancelled) { setResult(r); setLoading(false); } })
-      .catch(e => { if (!cancelled) { setError(e.message); setLoading(false); } });
     return () => { cancelled = true; };
   }, [ideaA.id, ideaB.id]);
+
+  // Scroll lock
+  useEffect(() => {
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = 'unset'; };
+  }, []);
 
   const winnerIdea = result?.winner === 'A' ? ideaA : ideaB;
 
   return (
     <motion.div
-      className="fixed inset-0 z-[200] flex items-start justify-center bg-black/70 pt-[64px] px-3 pb-4 backdrop-blur-sm sm:pt-[72px] sm:px-4 sm:pb-6"
+      className="fixed inset-0 z-[999] flex items-start justify-center bg-black/80 px-4 pb-10 pt-24 backdrop-blur-md sm:pt-32"
       initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
       onClick={onClose}
     >
