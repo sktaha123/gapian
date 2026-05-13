@@ -1,66 +1,102 @@
 // Available models — ordered best → fastest fallback
-const GEMINI_MODELS = ['gemini-2.5-flash', 'gemini-1.5-flash', 'gemini-1.5-pro'];
-const BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
+// Replace your old array with this one:
+// Updated for 2026 support
+const GEMINI_MODELS = [
+  'gemini-3.1-flash-lite',
+  'gemini-3-flash'
+];
 
 // In-memory cache (per session)
 const cache = new Map();
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Shared fetch helper — retries across models on HTTP / network failure only
-// ─────────────────────────────────────────────────────────────────────────────
-async function callGemini(apiKey, prompt, extraConfig = {}) {
+/**
+ * Shared fetch helper — routes through Vertex AI endpoints
+ * This implementation targets the Vertex AI REST API which consumes GCP credits.
+ */
+async function callGemini(prompt, extraConfig = {}) {
+  const projectId = import.meta.env.VITE_GCP_PROJECT_ID;
+  const location = import.meta.env.VITE_GCP_LOCATION || 'us-central1';
+
+  if (projectId === 'your-project-id' || !projectId) {
+    throw new Error('GCP Project ID not configured. Please set VITE_GCP_PROJECT_ID in your .env file.');
+  }
+
   const body = {
-    contents: [{ parts: [{ text: prompt }] }],
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
     generationConfig: {
       temperature: 0.9,
       maxOutputTokens: 4096,
-      responseMimeType: 'application/json',
       ...extraConfig,
     },
   };
 
+  // Note: For client-side requests to Vertex AI, we need an OAuth2 token.
+  // In a local/dev environment, we use a bridge or proxy that uses ADC.
+  const token = await getAuthToken();
+
   const httpErrors = [];
   for (const model of GEMINI_MODELS) {
-    const url = `${BASE}/${model}:generateContent?key=${apiKey}`;
+    const domain = location === 'global' ? 'aiplatform.googleapis.com' : `${location}-aiplatform.googleapis.com`;
+    const url = `https://${domain}/v1/projects/${projectId}/locations/${location}/publishers/google/models/${model}:generateContent`;
+
     let responseText;
     try {
       const res = await fetch(url, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify(body),
       });
+
       responseText = await res.text();
+
       if (!res.ok) {
         let detail = responseText;
-        try { detail = JSON.parse(responseText)?.error?.message || responseText; } catch {}
-        if (res.status === 429) throw new Error('Rate limit reached. Please wait a moment and try again.');
+        try { detail = JSON.parse(responseText)?.error?.message || responseText; } catch { }
+        if (res.status === 404) {
+          httpErrors.push(`[${model}] 404: Not Found. Ensure Vertex AI API is enabled in project "${projectId}" and the model "${model}" is available in "${location}".`);
+          continue;
+        }
+        if (res.status === 429) throw new Error('Rate limit reached on Vertex AI.');
+        if (res.status === 401) throw new Error('Authentication failed. Ensure your GCP token is valid.');
         httpErrors.push(`[${model}] ${res.status}: ${detail}`);
         continue;
       }
     } catch (err) {
       if (err.message.includes('Rate limit')) throw err;
-      httpErrors.push(`[${model}] Network: ${err.message}`);
+      httpErrors.push(`[${model}] Network/Auth: ${err.message}`);
       continue;
     }
-    // HTTP success — parse and return text content
     return extractText(responseText);
   }
-  throw new Error(`All models failed:\n${httpErrors.join('\n')}`);
+  throw new Error(`Vertex AI calls failed:\n${httpErrors.join('\n')}`);
 }
 
-function extractText(responseText) {
+/**
+ * Helper to get a valid GCP Access Token.
+ * In a real-world app, this would come from a backend or Firebase Auth.
+ * For this refactor, we look for VITE_GCP_ACCESS_TOKEN or use a local bridge.
+ */
+async function getAuthToken() {
+  // 1. Check if token is directly provided (for quick testing)
+  const manualToken = import.meta.env.VITE_GCP_ACCESS_TOKEN;
+  if (manualToken) return manualToken;
+
+  // 2. Otherwise, attempt to fetch from a local bridge (Vertex Proxy)
+  // This bridge uses ADC (Application Default Credentials) on your machine.
   try {
-    const envelope = JSON.parse(responseText);
-    return envelope?.candidates?.[0]?.content?.parts?.[0]?.text ?? responseText;
-  } catch {
-    return responseText;
+    const res = await fetch('http://localhost:3002/token');
+    if (res.ok) {
+      const data = await res.json();
+      return data.token;
+    }
+  } catch (e) {
+    // Bridge not running
   }
-}
 
-function getApiKey() {
-  const k = import.meta.env.VITE_GEMINI_API_KEY;
-  if (!k) throw new Error('VITE_GEMINI_API_KEY is not set. Add it to your .env file or Vercel environment variables.');
-  return k;
+  throw new Error('No authentication method found for Vertex AI. Please run the Vertex Bridge (npm run bridge) or provide VITE_GCP_ACCESS_TOKEN.');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -71,9 +107,8 @@ export async function fetchProductIdeas(prompt, count, options = {}) {
   const cacheKey = `ideas:${prompt}:${count}:${language}:${creatorType}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey);
 
-  const apiKey = getApiKey();
   const creatorHint = creatorType ? ` The creator type is: ${creatorType}.` : '';
-  const langHint    = language !== 'English' ? ` Respond in ${language}.` : '';
+  const langHint = language !== 'English' ? ` Respond in ${language}.` : '';
 
   const prompt_ = [
     `You are a digital product strategist.${creatorHint}${langHint}`,
@@ -91,7 +126,7 @@ export async function fetchProductIdeas(prompt, count, options = {}) {
     'No markdown, no code fences, no extra text.',
   ].join('\n');
 
-  const raw  = await callGemini(apiKey, prompt_);
+  const raw = await callGemini(prompt_);
   const ideas = parseArray(raw).map((item, i) => normalizeIdea(item, prompt, i));
 
   cache.set(cacheKey, ideas);
@@ -102,7 +137,6 @@ export async function fetchProductIdeas(prompt, count, options = {}) {
 // 2. On-demand deep-dive for a single idea
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchIdeaDetails(idea) {
-  const apiKey = getApiKey();
   const cacheKey = `details:${idea.id}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey);
 
@@ -121,7 +155,7 @@ export async function fetchIdeaDetails(idea) {
     'No markdown, no extra text.',
   ].join('\n');
 
-  const raw    = await callGemini(apiKey, prompt, { temperature: 0.7 });
+  const raw = await callGemini(prompt, { temperature: 0.7 });
   const result = parseObject(raw);
   cache.set(cacheKey, result);
   return result;
@@ -131,8 +165,6 @@ export async function fetchIdeaDetails(idea) {
 // 3. Refine all results with a follow-up instruction
 // ─────────────────────────────────────────────────────────────────────────────
 export async function fetchRefinedIdeas(ideas, instruction, count) {
-  const apiKey = getApiKey();
-
   const existing = ideas.map(i => i.title).join(', ');
   const prompt = [
     `You previously generated these product ideas: ${existing}.`,
@@ -142,7 +174,7 @@ export async function fetchRefinedIdeas(ideas, instruction, count) {
     'No markdown, no extra text.',
   ].join('\n');
 
-  const raw = await callGemini(apiKey, prompt);
+  const raw = await callGemini(prompt);
   return parseArray(raw).map((item, i) => normalizeIdea(item, instruction, i));
 }
 
@@ -150,7 +182,6 @@ export async function fetchRefinedIdeas(ideas, instruction, count) {
 // 4. Compare two ideas head-to-head
 // ─────────────────────────────────────────────────────────────────────────────
 export async function compareIdeas(ideaA, ideaB) {
-  const apiKey = getApiKey();
   const cacheKey = `compare:${ideaA.id}:${ideaB.id}`;
   if (cache.has(cacheKey)) return cache.get(cacheKey);
 
@@ -168,7 +199,7 @@ export async function compareIdeas(ideaA, ideaB) {
     'No markdown, no extra text.',
   ].join('\n');
 
-  const raw    = await callGemini(apiKey, prompt, { temperature: 0.6 });
+  const raw = await callGemini(prompt, { temperature: 0.6 });
   const result = parseObject(raw);
   cache.set(cacheKey, result);
   return result;
@@ -207,7 +238,7 @@ function parseObject(text) {
   if (parsed && typeof parsed === 'object') return parsed;
 
   const start = s.indexOf('{');
-  const end   = s.lastIndexOf('}');
+  const end = s.lastIndexOf('}');
   if (start !== -1 && end > start) { parsed = tryParse(s.slice(start, end + 1)); if (parsed) return parsed; }
   throw new Error('Could not parse AI response as JSON object.\nRaw: ' + text.slice(0, 300));
 }
@@ -217,15 +248,25 @@ function tryParse(text) { try { return JSON.parse(text); } catch { return null; 
 function normalizeIdea(item, prompt, index) {
   const score = Number(item?.score);
   return {
-    id:          `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
-    title:       str(item?.title)       || `${prompt} Idea ${index + 1}`,
-    headline:    str(item?.headline)    || 'A premium digital product concept.',
+    id: `${Date.now()}-${index}-${Math.random().toString(36).slice(2, 6)}`,
+    title: str(item?.title) || `${prompt} Idea ${index + 1}`,
+    headline: str(item?.headline) || 'A premium digital product concept.',
     description: str(item?.description) || 'A refined concept for modern creators.',
-    score:       Number.isFinite(score) && score >= 1 && score <= 10 ? score : 7,
-    tags:        Array.isArray(item?.tags) ? item.tags.filter(Boolean).slice(0, 3) : [],
-    pricing:     str(item?.pricing)     || 'TBD',
-    audience:    str(item?.audience)    || 'Creators and entrepreneurs.',
+    score: Number.isFinite(score) && score >= 1 && score <= 10 ? score : 7,
+    tags: Array.isArray(item?.tags) ? item.tags.filter(Boolean).slice(0, 3) : [],
+    pricing: str(item?.pricing) || 'TBD',
+    audience: str(item?.audience) || 'Creators and entrepreneurs.',
   };
 }
 
 function str(v) { return typeof v === 'string' && v.trim() ? v.trim() : ''; }
+
+function extractText(responseText) {
+  try {
+    const json = JSON.parse(responseText);
+    // Vertex AI response structure: candidates[0].content.parts[0].text
+    return json.candidates[0].content.parts[0].text;
+  } catch (e) {
+    throw new Error('Failed to extract text from Vertex response. Raw: ' + responseText);
+  }
+}

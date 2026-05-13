@@ -5,12 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "bridge": "node scripts/vertex-bridge.js",
+    "dev:vertex": "npm run bridge & vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google-cloud/vertexai": "^1.12.0",
+    "@google/genai": "^2.2.0",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
     "framer-motion": "^11.0.0",
+    "google-auth-library": "^10.6.2",
     "lucide-react": "^0.481.0",
+    "node-fetch": "^3.3.2",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.16.0",
