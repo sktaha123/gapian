@@ -103,7 +103,7 @@ function HomePage() {
       setErrorMsg(err?.message || 'An unexpected error occurred.');
       setStatus('error');
     }
-  }, [query, quantity, language, creatorType, addEntry]);
+  }, [query, quantity, creatorType, addEntry]);
 
   const handleRefine = useCallback(async (instruction) => {
     setIsRefining(true);
