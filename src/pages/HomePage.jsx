@@ -189,11 +189,23 @@ function HomePage() {
           {isLoading && (
             <motion.section key="loading"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.35 }} className="space-y-10"
+              transition={{ duration: 0.35 }} className="space-y-10 pt-12 sm:pt-16"
             >
               <div className="space-y-4">
                 <p className="text-sm text-[#7DA2FF]">Generating {quantity} concepts…</p>
-                  <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">Working on it</h2>
+                <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">
+                  <TypeAnimation
+                    sequence={[
+                      'Working on it', 1000,
+                      'Analyzing markets', 1000,
+                      'Curating concepts', 1000,
+                      'Crafting strategy', 1000,
+                      'Finalizing ideas', 1000
+                    ]}
+                    repeat={Infinity}
+                    cursor={false}
+                  />
+                </h2>
                 {/* Progress bar */}
                 <div className="h-0.5 w-full max-w-xs overflow-hidden rounded-full bg-white/5">
                   <motion.div
@@ -214,7 +226,7 @@ function HomePage() {
           {isComplete && (
             <motion.section key="results"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35 }} className="space-y-6"
+              transition={{ duration: 0.35 }} className="space-y-6 pt-12 sm:pt-16"
             >
               {/* Header row */}
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
