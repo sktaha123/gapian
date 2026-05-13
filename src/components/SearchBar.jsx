@@ -79,9 +79,11 @@ function SearchBar({
                   
 
                   <button type="button"
-                    onClick={() => { setShowHistory(h => !h); setShowTrends(false); }}
-                    className="inline-flex h-6 items-center gap-1 rounded-full border border-white/5 bg-white/5 px-2 text-[11px] font-medium text-slate-300 transition-all hover:bg-white/10 hover:text-white whitespace-nowrap sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs">
-                    <Clock size={10} className="text-slate-400 sm:w-[11px] sm:h-[11px]" /><span>History</span>
+                    onClick={() => { setShowTrends(t => !t); setShowHistory(false); }}
+                    className={`inline-flex h-6 items-center gap-1 rounded-full border border-white/5 px-2 text-[11px] font-medium transition-all sm:h-7 sm:gap-1.5 sm:px-3 sm:text-xs ${
+                      showTrends ? 'bg-blue-600/20 text-blue-400' : 'bg-white/5 text-slate-300 hover:bg-white/10 hover:text-white'
+                    }`}>
+                    <Sparkles size={10} className={showTrends ? 'text-blue-400' : 'text-slate-400 sm:w-[11px] sm:h-[11px]'} /><span>Trends</span>
                   </button>
 
                   {/* Desktop trend pills — inline */}
