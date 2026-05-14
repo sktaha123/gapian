@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Copy, Check, Bookmark, BookmarkCheck, ThumbsUp, ThumbsDown, Expand, SquareStack } from 'lucide-react';
+import { Copy, Check, Bookmark, BookmarkCheck, Expand, SquareStack, Rocket } from 'lucide-react';
 import useCopy from '../hooks/useCopy.js';
 import { getRating, setRating } from '../services/storageService.js';
 
@@ -16,7 +16,7 @@ function ScoreBadge({ score }) {
   );
 }
 
-function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggleCompare }) {
+function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggleCompare, onCreateProduct }) {
   const { copiedId, copyToClipboard } = useCopy();
   const isCopied = copiedId === idea.id;
   const [rating, setRatingState] = useState(() => getRating(idea.id));
@@ -110,12 +110,7 @@ function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggl
 
         {/* Action bar */}
         <div className="mt-4 flex items-center justify-between border-t border-white/5 pt-4">
-          {/* Left: rating */}
-          <div className="flex items-center gap-1">
-            
-          </div>
-
-          {/* Right: save + expand + copy */}
+          {/* Left: save + expand */}
           <div className="flex items-center gap-1.5">
             <button
               type="button"
@@ -152,6 +147,18 @@ function ResultCard({ idea, isSaved, onToggleSave, onExpand, isSelected, onToggl
             </button>
           </div>
         </div>
+
+        {/* Create Product CTA */}
+        {onCreateProduct && (
+          <button
+            type="button"
+            onClick={() => onCreateProduct(idea)}
+            className="mt-3 group w-full inline-flex items-center justify-center gap-2 rounded-xl border border-purple-500/20 bg-gradient-to-r from-purple-500/[0.08] to-blue-500/[0.08] px-4 py-2.5 text-[13px] font-semibold text-purple-300 transition-all duration-300 hover:border-purple-500/40 hover:from-purple-500/15 hover:to-blue-500/15 hover:text-white"
+          >
+            <Rocket size={13} className="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            Create Product
+          </button>
+        )}
       </div>
     </motion.article>
   );

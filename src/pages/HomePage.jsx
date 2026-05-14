@@ -12,10 +12,9 @@ import FilterBar       from '../components/FilterBar.jsx';
 import RefinementChat  from '../components/RefinementChat.jsx';
 import SavedVault      from '../components/SavedVault.jsx';
 import OnboardingModal from '../components/OnboardingModal.jsx';
-import CompareModal    from '../components/CompareModal.jsx';
-
-
-import IdeaExpandModal from '../components/IdeaExpandModal.jsx';
+import CompareModal        from '../components/CompareModal.jsx';
+import IdeaExpandModal     from '../components/IdeaExpandModal.jsx';
+import ProductCreationFlow from '../components/ProductCreationFlow.jsx';
 
 import { fetchProductIdeas, fetchRefinedIdeas } from '../services/geminiService.js';
 import { useSavedIdeas }    from '../hooks/useSavedIdeas.js';
@@ -49,6 +48,9 @@ function HomePage() {
   // ── Expand modal ────────────────────────────────────────────────────────────
   const [expandedIdea, setExpandedIdea] = useState(null);
 
+  // ── Product creation flow (unified) ─────────────────────────────────────────
+  const [activeIdeaForCreation, setActiveIdeaForCreation] = useState(null);
+
   // ── Compare ─────────────────────────────────────────────────────────────────
   const [compareSet,  setCompareSet]  = useState([]);    // max 2 ideas
   const [showCompare, setShowCompare] = useState(false);
@@ -56,6 +58,8 @@ function HomePage() {
   // ── Hooks ───────────────────────────────────────────────────────────────────
   const { isSaved, toggleSave, getSaved, unsaveById } = useSavedIdeas();
   const { history, addEntry, removeEntry } = useSearchHistory();
+
+
 
   // ── Derived ─────────────────────────────────────────────────────────────────
   const isLoading  = status === 'loading';
@@ -271,6 +275,7 @@ function HomePage() {
                     onExpand={setExpandedIdea}
                     isSelected={compareSet.some(c => c.id === item.id)}
                     onToggleCompare={handleToggleCompare}
+                    onCreateProduct={setActiveIdeaForCreation}
                   />
                 ))}
               </div>
@@ -328,6 +333,14 @@ function HomePage() {
         )}
         {showCompare && compareSet.length === 2 && (
           <CompareModal key="compare" ideaA={compareSet[0]} ideaB={compareSet[1]} onClose={() => setShowCompare(false)} />
+        )}
+        {/* Unified Product Creation Flow */}
+        {activeIdeaForCreation && (
+          <ProductCreationFlow
+            key="creation-flow"
+            idea={activeIdeaForCreation}
+            onClose={() => setActiveIdeaForCreation(null)}
+          />
         )}
       </AnimatePresence>
     </DashboardLayout>

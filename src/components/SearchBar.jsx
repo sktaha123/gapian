@@ -141,7 +141,7 @@ function SearchBar({
                       onChange={e => onQuantityChange(Number(e.target.value))}
                       className="h-7 w-[65px] cursor-pointer rounded-full border border-white/5 bg-[#0B1220] px-3 text-[11px] font-medium text-slate-400 outline-none transition-all hover:bg-white/10 hover:text-slate-200 appearance-none pr-6"
                     >
-                      {[3, 5, 10, 20].map(n => <option key={n} value={n} className="bg-[#0B1220] text-slate-300">{n}</option>)}
+                      {[1, 3, 5, 10].map(n => <option key={n} value={n} className="bg-[#0B1220] text-slate-300">{n}</option>)}
                     </select>
                     <div className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 border-[3.5px] border-transparent border-t-slate-500 mt-[1px]" />
                   </div>

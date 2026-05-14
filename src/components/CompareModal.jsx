@@ -26,108 +26,136 @@ function CompareModal({ ideaA, ideaB, onClose }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[999] flex items-start justify-center bg-black/80 px-4 pb-10 pt-24 backdrop-blur-md sm:pt-32"
-      initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[1000] overflow-y-auto bg-[#05070B] px-4 pb-8 pt-24 sm:px-12 sm:pb-12 sm:pt-28"
+      initial={{ opacity: 0, y: 40 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 40 }}
+      transition={{ type: 'spring', damping: 25, stiffness: 200 }}
       onClick={onClose}
     >
-      <motion.div
-        className="relative flex w-full max-w-2xl flex-col rounded-2xl border border-white/[0.07] bg-[#080E1A] shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 80px)' }}
-        initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 16 }}
-        transition={{ duration: 0.22 }}
+      <div
+        className="mx-auto w-full max-w-6xl relative flex flex-col"
         onClick={e => e.stopPropagation()}
       >
-        <div className="pointer-events-none absolute inset-0 rounded-2xl">
-          <div className="absolute top-0 left-1/2 h-48 w-48 -translate-x-1/2 rounded-full bg-purple-500/10 blur-[60px]" />
+        <div className="pointer-events-none absolute inset-0 z-0">
+          <div className="absolute top-0 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-purple-500/10 blur-[120px]" />
         </div>
 
-        {/* Header — shrink-0 so it never scrolls */}
-        <div className="relative shrink-0 flex items-center justify-between border-b border-white/[0.06] p-6 rounded-t-2xl">
-          <h2 className="text-[18px] font-semibold text-slate-100">Head-to-Head Comparison</h2>
-          <button type="button" onClick={onClose} className="rounded-full p-1.5 text-slate-500 hover:bg-white/10 hover:text-white transition-colors">
-            <X size={18} />
-          </button>
+        {/* Header */}
+        <div className="relative z-10 flex items-start justify-between gap-6 pb-10 border-b border-white/10 mb-10">
+          <div className="flex-1">
+            <button type="button" onClick={onClose} className="mb-6 flex items-center gap-2 text-[13px] font-medium text-slate-400 hover:text-white transition-colors">
+              <X size={16} /> Close Comparison
+            </button>
+            <h2 className="text-4xl font-bold tracking-tight text-slate-50">Head-to-Head Comparison</h2>
+            <p className="mt-4 text-xl leading-relaxed text-purple-200/60">Evaluating market viability and strategy.</p>
+          </div>
         </div>
 
-        {/* Body — scrolls independently */}
-        <div className="relative flex-1 overflow-y-auto p-6 space-y-5">
+        {/* Body */}
+        <div className="relative z-10 space-y-8">
           {/* Idea labels */}
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {[ideaA, ideaB].map((idea, idx) => (
-              <div key={idea.id} className="rounded-xl border border-white/6 bg-white/[0.02] p-4">
-                <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500 mb-1">{idx === 0 ? 'Idea A' : 'Idea B'}</p>
-                <p className="text-[14px] font-semibold text-slate-200 leading-snug">{idea.title}</p>
+              <div key={idea.id} className="rounded-2xl border border-white/10 bg-white/[0.02] p-8">
+                <p className="text-[12px] font-bold uppercase tracking-widest text-slate-500 mb-2">{idx === 0 ? 'Idea A' : 'Idea B'}</p>
+                <p className="text-2xl font-bold text-slate-200 leading-snug">{idea.title}</p>
+                <p className="mt-3 text-[15px] text-slate-400">{idea.headline}</p>
               </div>
             ))}
           </div>
 
           {loading && (
-            <div className="flex items-center justify-center gap-3 py-10 text-slate-500">
-              <Loader2 size={18} className="animate-spin text-purple-400" />
-              <span className="text-[14px]">Comparing ideas…</span>
+            <div className="flex flex-col items-center justify-center gap-4 py-20 text-slate-500">
+              <Loader2 size={32} className="animate-spin text-purple-500" />
+              <span className="text-[15px] font-medium">Running comparative analysis…</span>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center gap-3 rounded-xl border border-red-500/20 bg-red-500/[0.06] px-4 py-3">
-              <AlertCircle size={16} className="shrink-0 text-red-400" />
-              <p className="text-[13px] text-red-300">{error}</p>
+            <div className="flex items-center gap-3 rounded-2xl border border-red-500/20 bg-red-500/[0.06] p-6">
+              <AlertCircle size={24} className="shrink-0 text-red-400" />
+              <p className="text-[15px] text-red-300">{error}</p>
             </div>
           )}
 
           {result && (
-            <>
-              {/* Winner */}
-              <div className="rounded-xl border border-yellow-500/20 bg-yellow-500/[0.05] p-5 text-center">
-                <Trophy size={20} className="mx-auto mb-2 text-yellow-400" />
-                <p className="text-[12px] font-semibold uppercase tracking-widest text-yellow-600 mb-1">Winner</p>
-                <p className="text-[18px] font-bold text-yellow-300">{winnerIdea.title}</p>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              
+              {/* Left Column: Winner & Summary */}
+              <div className="lg:col-span-1 space-y-8 lg:sticky lg:top-28 z-20 bg-[#05070B] lg:bg-transparent pb-4 lg:pb-0">
+                {/* Winner */}
+                <div className="rounded-2xl border border-yellow-500/20 bg-yellow-500/[0.05] p-8 text-center">
+                  <Trophy size={40} className="mx-auto mb-4 text-yellow-400" />
+                  <p className="text-[13px] font-bold uppercase tracking-widest text-yellow-600 mb-2">The Winner</p>
+                  <p className="text-3xl font-bold text-yellow-300">{winnerIdea.title}</p>
+                </div>
+
+                {/* Summary */}
+                {result.summary && (
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-8">
+                    <p className="text-[12px] font-bold uppercase tracking-widest text-slate-500 mb-4">Summary</p>
+                    <p className="text-[16px] leading-relaxed text-slate-300">{result.summary}</p>
+                  </div>
+                )}
+
+                {/* Recommendation */}
+                {result.recommendation && (
+                  <div className="rounded-2xl border border-blue-500/20 bg-blue-500/[0.05] p-8">
+                    <p className="text-[12px] font-bold uppercase tracking-widest text-blue-500 mb-4">Final Recommendation</p>
+                    <p className="text-[16px] leading-relaxed text-slate-300">{result.recommendation}</p>
+                  </div>
+                )}
               </div>
 
-              {/* Summary */}
-              {result.summary && (
-                <p className="text-[14px] leading-relaxed text-slate-400">{result.summary}</p>
-              )}
+              {/* Right Column: Detailed Categories Table -> Responsive Cards */}
+              <div className="lg:col-span-2">
+                {result.categories?.length > 0 && (
+                  <div className="flex flex-col gap-6">
+                    {result.categories.map((cat, i) => (
+                      <div key={i} className="rounded-2xl border border-white/10 bg-white/[0.02] p-5 sm:p-6 flex flex-col gap-4">
+                        {/* Header */}
+                        <div className="flex items-center justify-between pb-4 border-b border-white/5">
+                          <h3 className="text-[15px] font-semibold text-slate-200">{cat.label}</h3>
+                          <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 border border-white/10 text-[11px] text-slate-400 font-medium">
+                            <Trophy size={11} className={cat.winner === 'A' || cat.winner === 'B' ? 'text-emerald-400' : 'text-slate-500'} />
+                            Winner: {cat.winner}
+                          </div>
+                        </div>
+                        
+                        {/* Comparison Columns */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          {/* Idea A */}
+                          <div className={`rounded-xl p-4 sm:p-5 border transition-colors ${
+                            cat.winner === 'A' ? 'border-emerald-500/30 bg-emerald-500/[0.04]' : 'border-white/[0.04] bg-white/[0.01]'
+                          }`}>
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Idea A</p>
+                            <p className={`text-[14px] sm:text-[15px] leading-relaxed ${
+                              cat.winner === 'A' ? 'text-emerald-100 font-medium' : 'text-slate-400'
+                            }`}>
+                              {cat.a}
+                            </p>
+                          </div>
 
-              {/* Category table */}
-              {result.categories?.length > 0 && (
-                <div className="rounded-xl border border-white/6 overflow-hidden">
-                  <table className="w-full text-[13px]">
-                    <thead>
-                      <tr className="border-b border-white/5 bg-white/[0.02]">
-                        <th className="px-4 py-3 text-left font-medium text-slate-500">Category</th>
-                        <th className="px-4 py-3 text-center font-medium text-slate-400">A</th>
-                        <th className="px-4 py-3 text-center font-medium text-slate-400">B</th>
-                        <th className="px-4 py-3 text-center font-medium text-slate-500">
-                          <Trophy size={13} className="mx-auto text-yellow-500/70" />
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {result.categories.map((cat, i) => (
-                        <tr key={i} className="border-b border-white/[0.04] last:border-0">
-                          <td className="px-4 py-3 text-slate-400 font-medium">{cat.label}</td>
-                          <td className={`px-4 py-3 text-center ${cat.winner === 'A' ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>{cat.a}</td>
-                          <td className={`px-4 py-3 text-center ${cat.winner === 'B' ? 'text-emerald-400 font-semibold' : 'text-slate-500'}`}>{cat.b}</td>
-                          <td className="px-4 py-3 text-center text-slate-400">{cat.winner}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-
-              {/* Recommendation */}
-              {result.recommendation && (
-                <div className="rounded-xl border border-blue-500/20 bg-blue-500/[0.05] p-5">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest text-blue-500 mb-2">Recommendation</p>
-                  <p className="text-[14px] leading-relaxed text-slate-300">{result.recommendation}</p>
-                </div>
-              )}
-            </>
+                          {/* Idea B */}
+                          <div className={`rounded-xl p-4 sm:p-5 border transition-colors ${
+                            cat.winner === 'B' ? 'border-emerald-500/30 bg-emerald-500/[0.04]' : 'border-white/[0.04] bg-white/[0.01]'
+                          }`}>
+                            <p className="text-[11px] font-bold uppercase tracking-widest text-slate-500 mb-2">Idea B</p>
+                            <p className={`text-[14px] sm:text-[15px] leading-relaxed ${
+                              cat.winner === 'B' ? 'text-emerald-100 font-medium' : 'text-slate-400'
+                            }`}>
+                              {cat.b}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </div>
-      </motion.div>
+      </div>
     </motion.div>
   );
 }

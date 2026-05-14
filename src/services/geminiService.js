@@ -180,8 +180,74 @@ export async function fetchIdeaDetails(idea) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 3. Refine all results with a follow-up instruction
+// 3. Generate a full product blueprint from an idea (STEP 2)
 // ─────────────────────────────────────────────────────────────────────────────
+export async function fetchProductBlueprint(idea) {
+  const cacheKey = `blueprint:${idea.id}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `You are an elite digital product architect.`,
+    `Create a COMPLETE, PROFESSIONAL PRODUCT BLUEPRINT for this digital product:`,
+    `Title: "${idea.title}"`,
+    `Subtitle: "${idea.headline}"`,
+    `Description: "${idea.description}"`,
+    `Target Audience: "${idea.audience}"`,
+    ``,
+    `Return ONLY a valid JSON object with this EXACT structure:`,
+    `{`,
+    `  "overview": {`,
+    `    "goal": "string — the single core outcome this product delivers",`,
+    `    "audience": "string — specific audience description",`,
+    `    "problemsSolved": ["string", "string", "string"],`,
+    `    "transformation": "string — the before/after transformation",`,
+    `    "monetization": "string — monetization potential description",`,
+    `    "positioning": "string — market positioning statement"`,
+    `  },`,
+    `  "chapters": [`,
+    `    {`,
+    `      "title": "string",`,
+    `      "subtitle": "string",`,
+    `      "modules": [`,
+    `        {`,
+    `          "title": "string",`,
+    `          "sections": ["string", "string", "string"]`,
+    `        }`,
+    `      ],`,
+    `      "checklist": "string — name of the chapter checklist"`,
+    `    }`,
+    `  ],`,
+    `  "bonuses": [`,
+    `    {`,
+    `      "title": "string",`,
+    `      "description": "string",`,
+    `      "type": "worksheet|template|swipe-file|prompt-pack|resource|checklist"`,
+    `    }`,
+    `  ],`,
+    `  "positioning": {`,
+    `    "level": "Beginner|Intermediate|Advanced|All Levels",`,
+    `    "premiumAngle": "string — why this commands a premium price",`,
+    `    "authority": "string — authority positioning statement",`,
+    `    "perception": "string — perceived value description"`,
+    `  }`,
+    `}`,
+    ``,
+    `Requirements:`,
+    `- Generate exactly 6-8 chapters`,
+    `- Each chapter must have 2-3 modules`,
+    `- Each module must have 3-4 sections`,
+    `- Generate exactly 4-5 bonuses`,
+    `- Make every field specific to the product concept — no generic placeholders`,
+    `- No markdown, no code fences, no extra text.`,
+  ].join('\n');
+
+  const raw = await callGemini(prompt, { temperature: 0.7, maxOutputTokens: 8192 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+
 export async function fetchRefinedIdeas(ideas, instruction, count) {
   const existing = ideas.map(i => i.title).join(', ');
   const prompt = [
@@ -217,14 +283,96 @@ export async function compareIdeas(ideaA, ideaB) {
     'No markdown, no extra text.',
   ].join('\n');
 
-  const raw = await callGemini(prompt, { temperature: 0.6 });
+  const raw = await callGemini(prompt);
   const result = parseObject(raw);
   cache.set(cacheKey, result);
   return result;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Parsing helpers
+// 5. Manual Flow Generators
+// ─────────────────────────────────────────────────────────────────────────────
+
+export async function fetchFontRecommendations(idea) {
+  const cacheKey = `fonts:${idea.id}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `You are a master digital product designer.`,
+    `Recommend a premium 3-font typography pairing for this product:`,
+    `Title: ${idea.title}`,
+    `Audience: ${idea.audience}`,
+    `Return ONLY a JSON object:`,
+    `{`,
+    `  "heading": {"name": "Font Name", "url": "https://fonts.google.com/specimen/...", "why": "Why this works"},`,
+    `  "body": {"name": "Font Name", "url": "https://fonts.google.com/specimen/...", "why": "Why this works"},`,
+    `  "accent": {"name": "Font Name", "url": "https://fonts.google.com/specimen/...", "why": "Why this works"}`,
+    `}`,
+    `No markdown.`
+  ].join('\n');
+
+  const raw = await callGemini(prompt, { temperature: 0.7 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+export async function fetchColorPalette(idea) {
+  const cacheKey = `colors:${idea.id}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `You are a master digital product designer.`,
+    `Recommend a premium color palette for this product:`,
+    `Title: ${idea.title}`,
+    `Audience: ${idea.audience}`,
+    `Return ONLY a JSON object:`,
+    `{`,
+    `  "primary": "#HEX",`,
+    `  "secondary": "#HEX",`,
+    `  "accent": "#HEX",`,
+    `  "background": "#HEX",`,
+    `  "text": "#HEX",`,
+    `  "rationale": "2-3 sentences explaining the psychological impact",`,
+    `  "mood": "Short mood description"`,
+    `}`,
+    `No markdown.`
+  ].join('\n');
+
+  const raw = await callGemini(prompt, { temperature: 0.7 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+export async function fetchCoverDesignPrompts(idea, theme) {
+  const cacheKey = `cover:${idea.id}:${theme.name}`;
+  if (cache.has(cacheKey)) return cache.get(cacheKey);
+
+  const prompt = [
+    `You are a master digital product designer and AI prompt engineer.`,
+    `Create cover design image prompts for this product:`,
+    `Title: ${idea.title}`,
+    `Subtitle: ${idea.headline}`,
+    `Color Theme: ${theme.name}`,
+    `Return ONLY a JSON object:`,
+    `{`,
+    `  "front": "Ideogram.ai prompt for the front cover. Make it premium, describe lighting, typography, background.",`,
+    `  "back": "Ideogram.ai prompt for the back cover or background texture.",`,
+    `  "composition": "Short description of the layout",`,
+    `  "canvaSearch": ["search term 1", "search term 2", "search term 3"]`,
+    `}`,
+    `No markdown.`
+  ].join('\n');
+
+  const raw = await callGemini(prompt, { temperature: 0.7 });
+  const result = parseObject(raw);
+  cache.set(cacheKey, result);
+  return result;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Core parsers & helpers
 // ─────────────────────────────────────────────────────────────────────────────
 function stripFences(text) {
   return text.trim()
