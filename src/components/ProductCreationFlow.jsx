@@ -2,55 +2,23 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ArrowLeft, ArrowRight } from 'lucide-react';
 
-import StepPathSelector   from './flow/StepPathSelector.jsx';
-import StepOverview       from './flow/StepOverview.jsx';
-import StepBlueprint      from './flow/StepBlueprint.jsx';
-import StepAIIntro        from './flow/ai/StepAIIntro.jsx';
-import StepStyleSelector  from './flow/ai/StepStyleSelector.jsx';
-import StepThemeSelector  from './flow/ai/StepThemeSelector.jsx';
-import StepDepthSelector  from './flow/ai/StepDepthSelector.jsx';
-import StepFinalPrompt    from './flow/ai/StepFinalPrompt.jsx';
-import StepFonts          from './flow/manual/StepFonts.jsx';
-import StepColors         from './flow/manual/StepColors.jsx';
-import StepCover          from './flow/manual/StepCover.jsx';
-import StepDesignPrinciples from './flow/manual/StepDesignPrinciples.jsx';
-import StepContentCreation  from './flow/manual/StepContentCreation.jsx';
+import StepCustomization from './flow/unified/StepCustomization.jsx';
+import StepBlueprint from './flow/StepBlueprint.jsx';
+import StepFinalPrompt from './flow/ai/StepFinalPrompt.jsx';
+import StepMarketingAssets from './flow/unified/StepMarketingAssets.jsx';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Step sequences
-// ─────────────────────────────────────────────────────────────────────────────
-
-const MANUAL_STEPS = [
-  { id: 'overview',   title: 'Product Overview',    component: StepOverview },
-  { id: 'blueprint',  title: 'Product Blueprint',   component: StepBlueprint },
-  { id: 'fonts',      title: 'Font Guidance',        component: StepFonts },
-  { id: 'colors',     title: 'Color Palette',        component: StepColors },
-  { id: 'cover',      title: 'Cover Design',         component: StepCover },
-  { id: 'design',     title: 'Design Principles',    component: StepDesignPrinciples },
-  { id: 'content',    title: 'Content Creation',     component: StepContentCreation },
+const UNIFIED_STEPS = [
+  { id: 'customization', title: 'Design System Config',    component: StepCustomization },
+  { id: 'blueprint',     title: 'Product Blueprint',       component: StepBlueprint },
+  { id: 'prompt',        title: 'Specification Output',    component: StepFinalPrompt },
+  { id: 'marketing',     title: 'Marketing Asset Engine',  component: StepMarketingAssets }
 ];
 
-const AI_STEPS = [
-  { id: 'intro',      title: 'AI Creation',          component: StepAIIntro },
-  { id: 'blueprint',  title: 'Product Structure',    component: StepBlueprint },
-  { id: 'style',      title: 'Choose Style',         component: StepStyleSelector },
-  { id: 'theme',      title: 'Choose Theme',         component: StepThemeSelector },
-  { id: 'depth',      title: 'Content Depth',        component: StepDepthSelector },
-  { id: 'prompt',     title: 'Generate Product',     component: StepFinalPrompt },
-];
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Progress bar
-// ─────────────────────────────────────────────────────────────────────────────
-
-function ProgressBar({ pct, path }) {
-  const color = path === 'manual'
-    ? 'from-emerald-500 to-teal-400'
-    : 'from-violet-500 to-blue-400';
+function ProgressBar({ pct }) {
   return (
-    <div className="h-[2px] w-full bg-white/[0.04]">
+    <div className="h-[2px] w-full bg-[#202635]">
       <motion.div
-        className={`h-full bg-gradient-to-r ${color}`}
+        className="h-full bg-gradient-to-r from-[#1B4DCC] to-[#2D7DFF]"
         initial={false}
         animate={{ width: `${pct}%` }}
         transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
@@ -59,21 +27,15 @@ function ProgressBar({ pct, path }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Step dots
-// ─────────────────────────────────────────────────────────────────────────────
-
-function StepDots({ total, current, path }) {
-  const activeColor = path === 'manual' ? 'bg-emerald-500' : 'bg-violet-500';
-  const doneColor   = path === 'manual' ? 'bg-emerald-500/30' : 'bg-violet-500/30';
+function StepDots({ total, current }) {
   return (
     <div className="flex items-center gap-1.5">
       {Array.from({ length: total }).map((_, i) => (
         <div
           key={i}
           className={`rounded-full transition-all duration-300 ${
-            i === current ? `h-1.5 w-5 ${activeColor}`
-            : i < current ? `h-1 w-1 ${doneColor}`
+            i === current ? 'h-1.5 w-5 bg-[#2D7DFF]'
+            : i < current ? 'h-1 w-1 bg-[#2D7DFF]/30'
             : 'h-1 w-1 bg-white/10'
           }`}
         />
@@ -82,22 +44,17 @@ function StepDots({ total, current, path }) {
   );
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Main orchestrator
-// ─────────────────────────────────────────────────────────────────────────────
-
 function ProductCreationFlow({ idea, onClose }) {
-  const [path,         setPath]         = useState(null);
-  const [stepIndex,    setStepIndex]    = useState(-1);   // -1 = path selection
-  const [direction,    setDirection]    = useState(1);
-  const [canContinue,  setCanContinue]  = useState(true);
-  const [data,         setData]         = useState({});   // accumulated step data
+  const [stepIndex, setStepIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+  const [canContinue, setCanContinue] = useState(true);
+  const [data, setData] = useState({});
 
-  const steps        = path === 'manual' ? MANUAL_STEPS : path === 'ai' ? AI_STEPS : [];
-  const isPathScreen = stepIndex === -1;
-  const currentStep  = steps[stepIndex] ?? null;
-  const isLastStep   = stepIndex === steps.length - 1;
-  const progressPct  = steps.length > 0 ? ((stepIndex + 1) / steps.length) * 100 : 0;
+  const steps = UNIFIED_STEPS;
+  const currentStep = steps[stepIndex];
+  const isFirstStep = stepIndex === 0;
+  const isLastStep = stepIndex === steps.length - 1;
+  const progressPct = ((stepIndex + 1) / steps.length) * 100;
 
   const updateData = (key, value) => setData(d => ({ ...d, [key]: value }));
 
@@ -108,158 +65,127 @@ function ProductCreationFlow({ idea, onClose }) {
   };
 
   const goBack = () => {
+    if (isFirstStep) return;
     setDirection(-1);
-    if (stepIndex <= 0) { setStepIndex(-1); setPath(null); }
-    else setStepIndex(i => i - 1);
+    setStepIndex(i => i - 1);
     setCanContinue(true);
   };
 
-  const handlePathSelect = (selectedPath) => {
-    setPath(selectedPath);
-    setDirection(1);
-    setStepIndex(0);
-  };
-
-  // Render the active step component
-  const renderStep = () => {
-    if (isPathScreen) {
-      return <StepPathSelector idea={idea} onSelect={handlePathSelect} />;
-    }
-    if (!currentStep) return null;
-    const StepComponent = currentStep.component;
-    return (
-      <StepComponent
-        idea={idea}
-        data={data}
-        updateData={updateData}
-        onNext={goNext}
-        onCanContinue={setCanContinue}
-        path={path}
-      />
-    );
-  };
+  const StepComponent = currentStep.component;
 
   return (
     <motion.div
-      className="fixed inset-0 z-[1000] flex flex-col bg-[#05070B]"
+      className="flex min-h-[100dvh] flex-col bg-[#050505] text-white overflow-hidden"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       transition={{ duration: 0.25 }}
     >
-      {/* Ambient glow */}
+      {/* Premium Cinematic Background */}
       <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 h-[500px] w-[500px] -translate-x-1/2 rounded-full bg-blue-500/8 blur-[140px]" />
+        <div className="absolute -top-40 left-1/2 h-[600px] w-[800px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse_at_top,rgba(45,125,255,0.08),transparent_70%)] opacity-80" />
       </div>
 
-      {/* Progress bar */}
-      {!isPathScreen && (
-        <div className="relative z-20 shrink-0">
-          <ProgressBar pct={progressPct} path={path} />
-        </div>
-      )}
+      <div className="relative z-20 shrink-0">
+        <ProgressBar pct={progressPct} />
+      </div>
 
       {/* Header */}
-      <div className="relative z-20 shrink-0 border-b border-white/[0.06] bg-[#05070B]/90 backdrop-blur-xl">
-        <div className="flex h-13 items-center justify-between px-5 py-3 sm:px-8">
-          <div className="flex items-center gap-3">
-            {!isPathScreen && (
+      <div className="relative z-20 shrink-0 border-b border-[#202635] bg-[#050505]/90 backdrop-blur-xl">
+        <div className="flex h-14 items-center justify-between px-5 sm:px-8">
+          <div className="flex items-center gap-4">
+            {!isFirstStep && (
               <button
                 type="button"
                 onClick={goBack}
-                className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-white transition-colors"
+                className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#202635] bg-[#0B0B0F] text-[#A0A7B4] hover:text-white transition-colors"
               >
-                <ArrowLeft size={13} />
+                <ArrowLeft size={14} />
               </button>
             )}
-            <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.12em] min-w-0">
-              <span className="hidden text-slate-600 sm:inline">Gapian</span>
-              {!isPathScreen && path && (
-                <>
-                  <span className="hidden text-slate-700 sm:inline">/</span>
-                  <span className={`shrink-0 ${path === 'manual' ? 'text-emerald-500' : 'text-violet-500'}`}>
-                    {path === 'manual' ? 'Manual' : 'AI'}
-                  </span>
-                  <span className="shrink-0 text-slate-700">/</span>
-                  <span className="truncate text-slate-400 max-w-[100px] sm:max-w-none">{currentStep?.title}</span>
-                </>
-              )}
-              {isPathScreen && <span className="text-slate-400">Choose Path</span>}
+            <div className="flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.12em]">
+              <span className="hidden text-[#6E7685] sm:inline">Gapian AI</span>
+              <span className="hidden text-[#3A4352] sm:inline">/</span>
+              <span className="text-[#2D7DFF]">Spec Engine</span>
+              <span className="text-[#3A4352]">/</span>
+              <span className="truncate text-[#D9DEE7]">{currentStep.title}</span>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {!isPathScreen && steps.length > 0 && (
-              <span className="text-[11px] text-slate-600 tabular-nums">
-                {stepIndex + 1} / {steps.length}
-              </span>
-            )}
+          <div className="flex items-center gap-4">
+            <span className="text-[11px] font-semibold text-[#6E7685] tabular-nums">
+              {stepIndex + 1} / {steps.length}
+            </span>
             <button
               type="button"
               onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-lg border border-white/5 bg-white/[0.02] text-slate-500 hover:text-white transition-colors"
+              className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#202635] bg-[#0B0B0F] text-[#A0A7B4] hover:text-white transition-colors"
             >
-              <X size={13} />
+              <X size={14} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* Step content */}
-      <div className="relative z-10 flex-1 overflow-y-auto">
+      {/* Step Content */}
+      <div className="relative z-10 flex-1 overflow-y-auto scroll-smooth">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
-            key={isPathScreen ? 'path' : `${path}-${stepIndex}`}
+            key={stepIndex}
             custom={direction}
             variants={{
-              enter: d => ({ opacity: 0, x: d > 0 ? 48 : -48 }),
-              center: { opacity: 1, x: 0 },
-              exit:  d => ({ opacity: 0, x: d > 0 ? -48 : 48 }),
+              enter: d => ({ opacity: 0, y: 20 }),
+              center: { opacity: 1, y: 0 },
+              exit: d => ({ opacity: 0, y: -20 }),
             }}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.28, ease: [0.4, 0, 0.2, 1] }}
+            transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
             className="min-h-full"
           >
-            {renderStep()}
+            <StepComponent
+              idea={idea}
+              data={data}
+              updateData={updateData}
+              onNext={goNext}
+              onCanContinue={setCanContinue}
+            />
           </motion.div>
         </AnimatePresence>
       </div>
 
-      {/* Bottom navigation — hidden only on path screen */}
-      {!isPathScreen && (
-        <div className="relative z-20 shrink-0 border-t border-white/[0.06] bg-[#05070B]/90 backdrop-blur-xl px-5 py-4 sm:px-8">
-          <div className="mx-auto flex max-w-3xl items-center justify-between">
-            <button
-              type="button"
-              onClick={goBack}
-              className="flex items-center gap-2 text-[12px] font-medium text-slate-500 hover:text-slate-200 transition-colors"
-            >
-              <ArrowLeft size={13} /> Prev
-            </button>
+      {/* Bottom Navigation */}
+      <div className="relative z-20 shrink-0 border-t border-[#202635] bg-[#050505]/95 backdrop-blur-xl px-5 py-4 sm:px-8">
+        <div className="mx-auto flex max-w-5xl items-center justify-between">
+          <button
+            type="button"
+            onClick={goBack}
+            className={`flex items-center gap-2 text-[13px] font-semibold transition-colors ${
+              isFirstStep ? 'text-transparent pointer-events-none' : 'text-[#6E7685] hover:text-white'
+            }`}
+          >
+            <ArrowLeft size={14} /> Back
+          </button>
 
-            <StepDots total={steps.length} current={stepIndex} path={path} />
+          <StepDots total={steps.length} current={stepIndex} />
 
-            <button
-              type="button"
-              onClick={isLastStep ? onClose : goNext}
-              disabled={!canContinue}
-              className={`group flex items-center gap-2 rounded-xl px-5 py-2 text-[13px] font-bold text-white transition-all duration-200 ${
-                canContinue
-                  ? path === 'manual'
-                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 shadow-lg shadow-emerald-500/15'
-                    : 'bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 shadow-lg shadow-violet-500/15'
-                  : 'bg-white/5 text-slate-500 cursor-not-allowed'
-              }`}
-            >
-              {isLastStep ? 'Finish' : 'Next'}
-              {!isLastStep && <ArrowRight size={13} className={`transition-transform duration-200 ${canContinue ? 'group-hover:translate-x-0.5' : ''}`} />}
-              {isLastStep && <X size={13} className={`transition-transform duration-200 ${canContinue ? 'group-hover:scale-110' : ''}`} />}
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={isLastStep ? onClose : goNext}
+            disabled={!canContinue}
+            className={`group flex items-center gap-2 rounded-xl px-6 py-2.5 text-[13px] font-bold text-white transition-all duration-300 ${
+              canContinue
+                ? 'bg-[#2D7DFF] hover:bg-[#4B8DFF] shadow-[0_0_20px_rgba(45,125,255,0.2)]'
+                : 'bg-[#202635] text-[#6E7685] cursor-not-allowed'
+            }`}
+          >
+            {isLastStep ? 'Close Workspace' : 'Continue'}
+            {!isLastStep && <ArrowRight size={14} className={`transition-transform duration-300 ${canContinue ? 'group-hover:translate-x-1' : ''}`} />}
+            {isLastStep && <X size={14} className={`transition-transform duration-300 ${canContinue ? 'group-hover:scale-110' : ''}`} />}
+          </button>
         </div>
-      )}
+      </div>
     </motion.div>
   );
 }

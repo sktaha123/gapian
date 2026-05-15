@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TypeAnimation } from 'react-type-animation';
 import { AlertCircle, Download, SquareStack } from 'lucide-react';
@@ -15,57 +15,59 @@ import OnboardingModal from '../components/OnboardingModal.jsx';
 import CompareModal        from '../components/CompareModal.jsx';
 import IdeaExpandModal     from '../components/IdeaExpandModal.jsx';
 import ProductCreationFlow from '../components/ProductCreationFlow.jsx';
+import StepTypeSelector from '../components/flow/unified/StepTypeSelector.jsx';
 
 import { fetchProductIdeas, fetchRefinedIdeas } from '../services/geminiService.js';
 import { useSavedIdeas }    from '../hooks/useSavedIdeas.js';
 import { useSearchHistory } from '../hooks/useSearchHistory.js';
-import { isOnboardingDone } from '../services/storageService.js';
+import { isOnboardingDone, getWorkspaceState, saveWorkspaceState } from '../services/storageService.js';
 import { exportCSV, exportPDF } from '../utils/exportUtils.js';
-
+import { useBackButton } from '../hooks/useBackButton.js';
 
 function HomePage() {
-  // ── Search state ────────────────────────────────────────────────────────────
-  const [query,       setQuery]       = useState('I am looking for ');
-  const [quantity,    setQuantity]    = useState(5);
-  const [creatorType, setCreatorType] = useState('');
+  const initialWorkspace = getWorkspaceState();
+  
+  const [status, setStatus] = useState(initialWorkspace.results?.length > 0 ? 'complete' : 'welcome');
+  const [query, setQuery] = useState(initialWorkspace.query || 'I am looking for ');
+  const [quantity, setQuantity] = useState(5);
+  const [creatorType, setCreatorType] = useState(null);
 
-  // ── Results state ───────────────────────────────────────────────────────────
-  const [results,      setResults]      = useState([]);
-  const [status,       setStatus]       = useState('idle');   // idle|loading|complete|error
-  const [errorMsg,     setErrorMsg]     = useState('');
-  const [isRefining,   setIsRefining]   = useState(false);
+  const [results, setResults] = useState(initialWorkspace.results || []);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [isRefining, setIsRefining] = useState(false);
 
-  // ── UI toggles ──────────────────────────────────────────────────────────────
-  const [showTrends,   setShowTrends]   = useState(false);
-  const [showHistory,  setShowHistory]  = useState(false);
-  const [showGuide,    setShowGuide]    = useState(false);
-  const [showVault,    setShowVault]    = useState(false);
-  const [showOnboard,  setShowOnboard]  = useState(() => !isOnboardingDone());
+  const [showTrends, setShowTrends] = useState(false);
+  const [showHistory, setShowHistory] = useState(false);
+  const [showGuide, setShowGuide] = useState(false);
+  const [showVault, setShowVault] = useState(false);
+  const [showOnboard, setShowOnboard] = useState(() => !isOnboardingDone());
 
-  // ── Filter ──────────────────────────────────────────────────────────────────
   const [activeTag, setActiveTag] = useState(null);
-
-  // ── Expand modal ────────────────────────────────────────────────────────────
   const [expandedIdea, setExpandedIdea] = useState(null);
-
-  // ── Product creation flow (unified) ─────────────────────────────────────────
   const [activeIdeaForCreation, setActiveIdeaForCreation] = useState(null);
 
-  // ── Compare ─────────────────────────────────────────────────────────────────
-  const [compareSet,  setCompareSet]  = useState([]);    // max 2 ideas
+  const [compareSet, setCompareSet] = useState([]);
   const [showCompare, setShowCompare] = useState(false);
 
-  // ── Hooks ───────────────────────────────────────────────────────────────────
   const { isSaved, toggleSave, getSaved, unsaveById } = useSavedIdeas();
   const { history, addEntry, removeEntry } = useSearchHistory();
 
+  useBackButton(showGuide, () => setShowGuide(false));
+  useBackButton(showVault, () => setShowVault(false));
+  useBackButton(showOnboard, () => setShowOnboard(false));
+  useBackButton(showCompare, () => setShowCompare(false));
+  useBackButton(!!expandedIdea, () => setExpandedIdea(null));
+  useBackButton(!!activeIdeaForCreation, () => setActiveIdeaForCreation(null));
 
-
-  // ── Derived ─────────────────────────────────────────────────────────────────
-  const isLoading  = status === 'loading';
-  const isError    = status === 'error';
+  const isLoading = status === 'loading';
+  const isError = status === 'error';
   const isComplete = status === 'complete';
-  const showHero   = status === 'idle';
+
+  useEffect(() => {
+    if (status === 'complete' || status === 'search_input') {
+      saveWorkspaceState({ results, query });
+    }
+  }, [results, query, status]);
 
   const allTags = useMemo(() =>
     [...new Set(results.flatMap(r => r.tags || []))],
@@ -82,11 +84,9 @@ function HomePage() {
     [quantity]
   );
 
-  // ── Handlers ─────────────────────────────────────────────────────────────────
   const handleSearch = useCallback(async () => {
     const trimmed = query.trim();
     if (!trimmed) return;
-    // Robust reset for mobile/desktop
     setTimeout(() => {
       window.scrollTo(0, 0);
       document.body.scrollTo(0, 0);
@@ -95,7 +95,8 @@ function HomePage() {
     setShowTrends(false); setShowHistory(false);
     setStatus('loading'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]);
     try {
-      const ideas = await fetchProductIdeas(trimmed, quantity, { creatorType });
+      const typeLabel = creatorType?.title || '';
+      const ideas = await fetchProductIdeas(trimmed, quantity, { creatorType: typeLabel });
       setResults(ideas);
       setStatus('complete');
       addEntry(trimmed, quantity);
@@ -128,7 +129,7 @@ function HomePage() {
   }, []);
 
   const handleReset = useCallback(() => {
-    setStatus('idle'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]);
+    setStatus('welcome'); setResults([]); setErrorMsg(''); setActiveTag(null); setCompareSet([]); setCreatorType(null);
   }, []);
 
   const handleToggleCompare = useCallback((idea) => {
@@ -144,44 +145,143 @@ function HomePage() {
     unsaveById(id);
   }, [unsaveById]);
 
+  if (activeIdeaForCreation) {
+    return (
+      <ProductCreationFlow
+        key="creation-flow"
+        idea={{ ...activeIdeaForCreation, creatorType: creatorType?.title }}
+        onClose={() => setActiveIdeaForCreation(null)}
+      />
+    );
+  }
+
   return (
     <DashboardLayout onGuide={() => setShowGuide(true)} onVault={() => setShowVault(true)} onHistory={() => setShowHistory(h => !h)}>
       <div className="relative min-h-[calc(100vh-220px)]">
         <AnimatePresence mode="wait">
 
-          {/* ── HERO ─────────────────────────────────────────────────── */}
-          {showHero && (
-            <motion.section key="hero"
+          {/* ── WELCOME ─────────────────────────────────────────────────── */}
+          {status === 'welcome' && (
+            <motion.section key="welcome"
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="relative mx-auto flex max-w-4xl flex-col items-center justify-center pt-10 text-center"
+              transition={{ duration: 0.5 }}
+              className="relative mx-auto flex max-w-3xl flex-col items-center justify-center px-5 pt-20 text-center sm:pt-28"
             >
-              <div className="pointer-events-none absolute inset-0">
-                <div className="absolute left-1/2 top-0 h-60 w-60 -translate-x-1/2 rounded-full bg-[#3B82F6]/10 blur-[100px]" />
+              {/* Atmospheric glow */}
+              <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="absolute left-1/2 top-0 h-[500px] w-[700px] -translate-x-1/2 rounded-full bg-[radial-gradient(ellipse,rgba(45,125,255,0.12),transparent_70%)]" />
               </div>
-              <motion.h1
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.1 }}
-                className="relative mt-7 max-w-3xl text-[28px] font-semibold leading-[1.1] tracking-[-0.04em] text-[#F8FAFC] sm:text-4xl lg:text-5xl"
-              >
-                Discover digital product ideas
-                <span className="mt-2 block text-[#A5C4FF]">powered by AI intelligence.</span>
-              </motion.h1>
+
+              {/* Badge */}
               <motion.div
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.18 }}
-                className="relative mt-6 max-w-xl text-[14px] leading-7 text-[#94A3B8] sm:text-[15px]"
+                initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.05 }}
+                className="relative mb-7 inline-flex items-center gap-2 rounded-full border border-[#2D7DFF]/20 bg-[#2D7DFF]/[0.06] px-4 py-1.5"
               >
-                <TypeAnimation
-                  sequence={['Generate premium creator-focused concepts, positioning headlines, and marketable digital product opportunities instantly.', 1000]}
-                  speed={75} cursor repeat={0} className="text-[#94A3B8]"
-                />
+                <div className="h-1.5 w-1.5 rounded-full bg-[#2D7DFF] shadow-[0_0_6px_rgba(45,125,255,0.9)]" />
+                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#4B8DFF]">AI Workflow Engineering Platform</span>
               </motion.div>
-              <motion.button
-                type="button" onClick={() => setShowTrends(true)}
-                initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4, delay: 0.26 }}
-                className="relative mt-8 rounded-full border border-white/[0.06] bg-white/[0.03] px-5 py-2.5 text-sm text-[#CBD5E1] transition-all duration-300 hover:border-[#3B82F6]/30 hover:bg-[#3B82F6]/[0.05] hover:text-white"
+
+              {/* Headline */}
+              <motion.h1
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.1 }}
+                className="relative text-[40px] font-bold leading-[1.1] tracking-tight text-[#F5F7FA] sm:text-[56px] lg:text-[64px]"
               >
-                Explore trending topics
+                Engineer Premium
+                <span className="block text-transparent bg-clip-text" style={{ backgroundImage: 'linear-gradient(135deg, #4B8DFF 0%, #7AB6FF 100%)' }}>
+                  Digital Products.
+                </span>
+              </motion.h1>
+
+              {/* Subline */}
+              <motion.p
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.18 }}
+                className="relative mt-6 max-w-lg text-[16px] leading-[1.75] text-[#A0A7B4]"
+              >
+                Gapian AI structures the workflow. Claude creates the product.
+                Discover profitable ideas, engineer specification systems, and ship professional digital products.
+              </motion.p>
+
+              {/* CTA */}
+              <motion.button
+                type="button" onClick={() => setStatus('select_type')}
+                initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.26 }}
+                whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.98 }}
+                className="relative mt-10 inline-flex items-center justify-center gap-2.5 rounded-2xl bg-[#2D7DFF] px-10 py-4 text-[15px] font-bold text-white shadow-[0_0_40px_rgba(45,125,255,0.25)] transition-colors duration-300 hover:bg-[#4B8DFF]"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                Start Creating
               </motion.button>
+
+              {/* Trust signals */}
+              <motion.div
+                initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.5, delay: 0.4 }}
+                className="relative mt-12 flex flex-wrap items-center justify-center gap-6"
+              >
+                {['Design Specification Engine', 'Claude-Optimized Prompts', '6-Domain Architecture'].map((label) => (
+                  <div key={label} className="flex items-center gap-2">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#2D7DFF" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span className="text-[12px] font-medium text-[#6E7685]">{label}</span>
+                  </div>
+                ))}
+              </motion.div>
+            </motion.section>
+          )}
+
+          {/* ── SELECT TYPE ───────────────────────────────────────────── */}
+          {status === 'select_type' && (
+            <motion.section key="select_type"
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.35 }} className="pt-4 sm:pt-6 pb-20"
+            >
+              <StepTypeSelector 
+                data={{ productType: creatorType }}
+                updateData={(key, val) => setCreatorType(val)}
+                onCanContinue={() => {}} 
+              />
+              <div className="mx-auto flex max-w-5xl items-center justify-between px-5 sm:px-8">
+                <button type="button" onClick={() => setStatus('welcome')}
+                  className="text-[13px] font-medium text-[#6E7685] hover:text-white transition-colors">
+                  ← Back
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setStatus('search_input')}
+                  disabled={!creatorType}
+                  className="flex items-center gap-2 rounded-xl bg-[#2D7DFF] px-8 py-3 text-[14px] font-bold text-white shadow-[0_0_20px_rgba(45,125,255,0.15)] transition-all hover:bg-[#4B8DFF] disabled:cursor-not-allowed disabled:opacity-40"
+                >
+                  Continue to Topic
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                </button>
+              </div>
+            </motion.section>
+          )}
+
+          {/* ── SEARCH INPUT PROMPT ───────────────────────────────────── */}
+          {status === 'search_input' && (
+            <motion.section key="search_input"
+              initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.35 }}
+              className="flex min-h-[40vh] flex-col items-center justify-center px-5 pt-16 text-center sm:pt-24"
+            >
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#202635] bg-[#0B0B0F] px-4 py-1.5">
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#6E7685]">{creatorType?.title || 'Product'}</span>
+                <span className="text-[#3A4352]">·</span>
+                <span className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#2D7DFF]">Topic Input</span>
+              </div>
+              <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">What is your niche?</h2>
+              <p className="mt-4 max-w-md text-[15px] leading-relaxed text-[#A0A7B4]">
+                Enter a specific topic, industry, or audience. Gapian AI will discover profitable product opportunities.
+              </p>
+              {/* Quick topic chips */}
+              <div className="mt-8 flex flex-wrap items-center justify-center gap-2">
+                {['Freelance Design', 'AI Productivity', 'Email Marketing', 'Personal Finance', 'Health & Wellness', 'SaaS Growth'].map(chip => (
+                  <button key={chip} onClick={() => setQuery(`I am looking for ${chip}`)}
+                    className="rounded-lg border border-[#202635] bg-[#050505] px-3 py-1.5 text-[12px] font-medium text-[#A0A7B4] transition-all hover:border-[#2D7DFF]/40 hover:bg-[#2D7DFF]/[0.05] hover:text-[#7AB6FF]">
+                    {chip}
+                  </button>
+                ))}
+              </div>
+              <p className="mt-6 text-[12px] text-[#3A4352]">Or type your own below ↓</p>
             </motion.section>
           )}
 
@@ -192,8 +292,8 @@ function HomePage() {
               transition={{ duration: 0.35 }} className="space-y-10 pt-4 sm:pt-6"
             >
               <div className="space-y-4">
-                <p className="text-sm text-[#7DA2FF]">Generating {quantity} concepts…</p>
-                <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">
+                <p className="text-sm font-semibold uppercase tracking-widest text-[#2D7DFF]">Generating {quantity} concepts…</p>
+                <h2 className="text-2xl font-bold tracking-tight text-white sm:text-3xl lg:text-4xl">
                   <TypeAnimation
                     sequence={[
                       'Working on it', 1000,
@@ -206,10 +306,9 @@ function HomePage() {
                     cursor={false}
                   />
                 </h2>
-                {/* Progress bar */}
-                <div className="h-0.5 w-full max-w-xs overflow-hidden rounded-full bg-white/5">
+                <div className="h-1 w-full max-w-xs overflow-hidden rounded-full bg-[#202635]">
                   <motion.div
-                    className="h-full rounded-full bg-blue-500"
+                    className="h-full rounded-full bg-[#2D7DFF]"
                     initial={{ width: '0%' }}
                     animate={{ width: ['0%', '40%', '70%', '90%'] }}
                     transition={{ duration: 8, ease: 'easeInOut', times: [0, 0.3, 0.6, 1] }}
@@ -226,45 +325,41 @@ function HomePage() {
           {isComplete && (
             <motion.section key="results"
               initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35 }} className="space-y-6 pt-4 sm:pt-6"
+              transition={{ duration: 0.35 }} className="space-y-6 pt-4 sm:pt-6 pb-20"
             >
-              {/* Header row */}
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="space-y-0.5">
-                  <p className="text-sm text-[#7DA2FF]">{filteredResults.length} concepts{activeTag ? ` · ${activeTag}` : ''}</p>
-                  <h2 className="text-2xl font-display font-semibold tracking-[-0.04em] text-[#F8FAFC] sm:text-3xl lg:text-4xl">Generated concepts</h2>
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div className="space-y-1">
+                  <p className="text-[11px] font-bold uppercase tracking-[0.15em] text-[#2D7DFF]">{filteredResults.length} concepts{activeTag ? ` · ${activeTag}` : ''}</p>
+                  <h2 className="text-3xl font-bold tracking-tight text-white sm:text-4xl">Generated concepts</h2>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  {/* Compare button */}
                   {compareSet.length === 2 && (
                     <motion.button
                       type="button"
                       initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
                       onClick={() => setShowCompare(true)}
-                      className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-[13px] font-medium text-blue-300 transition-all hover:bg-blue-500/20"
+                      className="inline-flex items-center gap-2 rounded-lg border border-[#2D7DFF]/50 bg-[#2D7DFF]/10 px-4 py-2 text-[13px] font-bold text-[#4B8DFF] transition-all hover:bg-[#2D7DFF]/20"
                     >
-                      <SquareStack size={13} />Compare 2
+                      <SquareStack size={13} />Compare
                     </motion.button>
                   )}
                   <button type="button" onClick={() => exportPDF(results)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-blue-500/20 bg-blue-500/10 px-3.5 py-1.5 text-[13px] font-medium text-blue-300 transition-all hover:bg-blue-500/20">
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#202635] bg-[#050505] px-4 py-2 text-[13px] font-bold text-[#A0A7B4] transition-all hover:border-[#3A4352] hover:text-white">
                     <Download size={13} />PDF
                   </button>
                   <button type="button" onClick={() => exportCSV(results)}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-white/5 px-3.5 py-1.5 text-[13px] font-medium text-slate-400 transition-all hover:bg-white/10 hover:text-white">
+                    className="inline-flex items-center gap-2 rounded-lg border border-[#202635] bg-[#050505] px-4 py-2 text-[13px] font-bold text-[#A0A7B4] transition-all hover:border-[#3A4352] hover:text-white">
                     <Download size={13} />CSV
                   </button>
                   <button type="button" onClick={handleReset}
-                    className="rounded-full border border-white/10 bg-white/5 px-4 py-1.5 text-sm text-slate-400 transition-all hover:bg-white/10 hover:text-white">
+                    className="rounded-lg border border-[#202635] bg-[#0B0B0F] px-4 py-2 text-[13px] font-bold text-[#D9DEE7] transition-all hover:border-[#3A4352] hover:text-white">
                     New search
                   </button>
                 </div>
               </div>
 
-              {/* Filter bar */}
               <FilterBar tags={allTags} activeTag={activeTag} onSelect={setActiveTag} />
 
-              {/* Cards grid */}
               <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                 {filteredResults.map(item => (
                   <ResultCard
@@ -280,7 +375,6 @@ function HomePage() {
                 ))}
               </div>
 
-              {/* Refinement chat */}
               <RefinementChat ideas={results} count={quantity} onRefined={handleRefine} isLoading={isRefining} />
             </motion.section>
           )}
@@ -292,18 +386,18 @@ function HomePage() {
               transition={{ duration: 0.35 }}
               className="flex flex-col items-center justify-center gap-6 pt-16 text-center"
             >
-              <div className="flex h-16 w-16 items-center justify-center rounded-full border border-red-500/20 bg-red-500/10">
+              <div className="flex h-16 w-16 items-center justify-center rounded-2xl border border-red-500/20 bg-red-500/10">
                 <AlertCircle size={28} className="text-red-400" />
               </div>
               <div className="space-y-2">
-                <h2 className="text-2xl font-semibold text-[#F8FAFC]">Something went wrong</h2>
-                <p className="max-w-md whitespace-pre-line text-sm leading-6 text-[#94A3B8]">
-                  {errorMsg || 'The Gemini API request failed. Check your API key and try again.'}
+                <h2 className="text-2xl font-bold tracking-tight text-white">Something went wrong</h2>
+                <p className="max-w-md whitespace-pre-line text-[14px] leading-relaxed text-[#A0A7B4]">
+                  {errorMsg || 'The AI generation failed. Check your API bridge and try again.'}
                 </p>
               </div>
               <button type="button" onClick={handleReset}
-                className="rounded-full border border-white/10 bg-white/5 px-6 py-2.5 text-sm font-medium text-slate-200 transition-all hover:bg-white/10 hover:text-white">
-                Try again
+                className="rounded-lg border border-[#202635] bg-[#0B0B0F] px-6 py-3 text-[14px] font-bold text-[#D9DEE7] transition-all hover:border-[#3A4352] hover:text-white">
+                Start Over
               </button>
             </motion.section>
           )}
@@ -311,16 +405,18 @@ function HomePage() {
         </AnimatePresence>
       </div>
 
-      {/* Search bar */}
-      <SearchBar
-        query={query}           onQueryChange={setQuery}
-        quantity={quantity}     onQuantityChange={setQuantity}
-        creatorType={creatorType} onCreatorTypeChange={setCreatorType}
-        onSearch={handleSearch} isLoading={isLoading}
-        showTrends={showTrends} setShowTrends={setShowTrends} onSelectTrend={handleSelectTrend}
-        showHistory={showHistory} setShowHistory={setShowHistory}
-        history={history}       onSelectHistory={handleSelectHistory} onRemoveHistory={removeEntry}
-      />
+      {/* ── SEARCH BAR (Fixed Bottom) ─────────────────────────────────── */}
+      {status !== 'welcome' && status !== 'select_type' && (
+        <SearchBar
+          query={query}           onQueryChange={setQuery}
+          quantity={quantity}     onQuantityChange={setQuantity}
+          creatorType={creatorType?.title || ''} onCreatorTypeChange={() => {}}
+          onSearch={handleSearch} isLoading={isLoading}
+          showTrends={showTrends} setShowTrends={setShowTrends} onSelectTrend={handleSelectTrend}
+          showHistory={showHistory} setShowHistory={setShowHistory}
+          history={history}       onSelectHistory={handleSelectHistory} onRemoveHistory={removeEntry}
+        />
+      )}
 
       {/* Modals */}
       <GuideModal open={showGuide} onClose={() => setShowGuide(false)} />
@@ -333,14 +429,6 @@ function HomePage() {
         )}
         {showCompare && compareSet.length === 2 && (
           <CompareModal key="compare" ideaA={compareSet[0]} ideaB={compareSet[1]} onClose={() => setShowCompare(false)} />
-        )}
-        {/* Unified Product Creation Flow */}
-        {activeIdeaForCreation && (
-          <ProductCreationFlow
-            key="creation-flow"
-            idea={activeIdeaForCreation}
-            onClose={() => setActiveIdeaForCreation(null)}
-          />
         )}
       </AnimatePresence>
     </DashboardLayout>

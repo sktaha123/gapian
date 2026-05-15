@@ -40,6 +40,10 @@ export const setRating  = (id, val)   => {
   write(KEYS.RATINGS, r);
 };
 
+// ── Workspace State ─────────────────────────────────────────────────────────
+export const getWorkspaceState = () => read('gapian_workspace_state', { results: [], query: 'I am looking for ' });
+export const saveWorkspaceState = (state) => write('gapian_workspace_state', state);
+
 // ── Onboarding ───────────────────────────────────────────────────────────────
 export const isOnboardingDone  = () => read(KEYS.ONBOARDING, false);
 export const setOnboardingDone = () => write(KEYS.ONBOARDING, true);
